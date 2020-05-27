@@ -181,6 +181,7 @@
 #define BSP_USING_UART3
 #define BSP_USING_UART4
 #define BSP_USING_UART6
+#define BSP_USING_WDT
 
 /* Board extended module Drivers */
 

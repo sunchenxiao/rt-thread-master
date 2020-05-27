@@ -298,9 +298,17 @@ void pantilt_resolving_entry(void* parameter)
     {
         result = rt_sem_take(env->sh_ptz, RT_WAITING_FOREVER);
 
+						//location
+						if (env->ptz_action == PANTILT_ACTION_ASK)
+            {
+								env->ptz_action = PANTILT_ACTION_NULL;
+								pbuf = rt_mp_alloc(mempool, RT_WAITING_FOREVER);
+								rt_memcpy(pbuf, ptz_askctrlpkt, PTZ_ASK_PKT_SIZE);
+								rt_mb_send(mailbox, (rt_ubase_t)pbuf);           
+            }
 
         if (env->trck_incharge)
-        {
+        {						
             pktsz = sizeof(ptz_serialctrlpkt);
             rt_memset(&ctrlpkt, 0x00, pktsz);
 
@@ -551,12 +559,13 @@ void pantilt_resolving_entry(void* parameter)
                     rt_thread_delay(200);
                 }
             }
-						else if (env->ptz_action == PANTILT_ACTION_ASK)
-            {
-								pbuf = rt_mp_alloc(mempool, RT_WAITING_FOREVER);
-								rt_memcpy(pbuf, ptz_askctrlpkt, PTZ_ASK_PKT_SIZE);
-								rt_mb_send(mailbox, (rt_ubase_t)pbuf);           
-            }
+//						else if (env->ptz_action == PANTILT_ACTION_ASK)
+//            {
+//								env->ptz_action = PANTILT_ACTION_NULL;
+//								pbuf = rt_mp_alloc(mempool, RT_WAITING_FOREVER);
+//								rt_memcpy(pbuf, ptz_askctrlpkt, PTZ_ASK_PKT_SIZE);
+//								rt_mb_send(mailbox, (rt_ubase_t)pbuf);           
+//            }
             else if (env->ptz_action == PANTILT_ACTION_HOMING)
             {
                 LOG_D("PANTILT_ACTION_HOMING");

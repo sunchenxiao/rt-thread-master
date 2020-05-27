@@ -180,7 +180,7 @@ static void print_rawdata(rt_uint8_t *pbuf, rt_size_t sz, char *str)
 static void uart3_send_entry(void* parameter){
     rt_ubase_t addr;
     rt_uint8_t* paddr;
-    rt_device_t devUart3 = rt_device_find("uart6");
+    rt_device_t devUart3 = rt_device_find("uart3");
     RT_ASSERT(devUart3);
     
     while (1){
@@ -195,7 +195,7 @@ static void uart3_send_entry(void* parameter){
 static void uart4_send_entry(void* parameter){
     rt_ubase_t addr;
     rt_uint8_t* paddr;
-    rt_device_t devUart4 = rt_device_find("uart4");
+    rt_device_t devUart4 = rt_device_find("uart6");
     RT_ASSERT(devUart4);
     
     while (1){
@@ -362,7 +362,7 @@ static void uart3_rx_entry(void* parameter)
     rt_err_t retval = RT_EOK;
     rt_thread_t tidU2Tx = RT_NULL;
     
-    pUart3 = rt_device_find("uart6");
+    pUart3 = rt_device_find("uart3");
     RT_ASSERT(pUart3 != RT_NULL);
     
     rt_device_open(pUart3, RT_DEVICE_OFLAG_RDWR | RT_DEVICE_FLAG_INT_RX);
@@ -467,7 +467,7 @@ static void uart4_rx_entry(void* parameter)
     rt_uint32_t e;
     rt_err_t retval = RT_EOK;
 
-    pUart4 = rt_device_find("uart4");
+    pUart4 = rt_device_find("uart6");
     RT_ASSERT(pUart4 != RT_NULL);
     rt_device_open(pUart4, RT_DEVICE_OFLAG_RDWR | RT_DEVICE_FLAG_INT_RX);
 
@@ -535,16 +535,16 @@ static void idle_hook(void)
 int main(void)
 {   
     rt_err_t retval = RT_EOK;
-//    rt_uint32_t timeout = 1;
-//    
-//    pWDT = rt_device_find("wdt");
-//    RT_ASSERT(pWDT != RT_NULL);
-//    
-//    retval = rt_device_init(pWDT);
-//    retval = rt_device_control(pWDT, RT_DEVICE_CTRL_WDT_SET_TIMEOUT, &timeout);
-//    retval = rt_device_control(pWDT, RT_DEVICE_CTRL_WDT_START, RT_NULL);
-//    rt_thread_idle_sethook(idle_hook);
-//    rt_kprintf("Set WatchDog Complate!\n");
+    rt_uint32_t timeout = 1;
+    
+    pWDT = rt_device_find("wdt");
+    RT_ASSERT(pWDT != RT_NULL);
+    
+    retval = rt_device_init(pWDT);
+    retval = rt_device_control(pWDT, RT_DEVICE_CTRL_WDT_SET_TIMEOUT, &timeout);
+    retval = rt_device_control(pWDT, RT_DEVICE_CTRL_WDT_START, RT_NULL);
+    rt_thread_idle_sethook(idle_hook);
+    rt_kprintf("Set WatchDog Complate!\n");
     
     /* set LED0 pin mode to output */
     rt_pin_mode(LED0_PIN, PIN_MODE_OUTPUT);

@@ -127,12 +127,12 @@ static void track_data_recv_entry(void* parameter)
     
     dev = rt_device_find(TRACK_UARTPORT_NAME);
     RT_ASSERT(dev != RT_NULL);
+		
+    pid_init(&pid_x, 1.4f, 0.005f, 0.05f);
+    pid_init(&pid_y, 1.4f, 0.005f, 0.05f);
     
-    pid_init(&pid_x, 1.1f, 0.025f, 1.5f);
-    pid_init(&pid_y, 1.1f, 0.025f, 1.5f);
-    
-    pid_setThreshold(&pid_x, 500.0f, 1000.0f, 25.0f);
-    pid_setThreshold(&pid_y, 500.0f, 1000.0f, 25.0f);
+    pid_setThreshold(&pid_x, 500.0f, 200.0f, 10.0f);
+    pid_setThreshold(&pid_y, 500.0f, 200.0f, 10.0f);
     
     pid_setSetpoint(&pid_x, 0.0f);
     pid_setSetpoint(&pid_y, 0.0f);
@@ -193,7 +193,7 @@ static void track_data_recv_entry(void* parameter)
             if (on_tracing == RT_FALSE)
                 continue;
             
-            if (lost_count++ < 10)
+            if (lost_count++ < 1)
                 continue;
             
             on_tracing = RT_FALSE;
@@ -250,8 +250,8 @@ void track_resolving_entry(void* parameter)
     
     dev = rt_device_find(TRACK_UARTPORT_NAME);
     RT_ASSERT(dev != RT_NULL);
-    
-    rt_device_open(dev, RT_DEVICE_OFLAG_RDWR | RT_DEVICE_FLAG_INT_RX);
+	
+		rt_device_open(dev, RT_DEVICE_OFLAG_RDWR | RT_DEVICE_FLAG_INT_RX);
 
     semaph = rt_sem_create(TRACK_SEMAPHORE_RX_NAME, 0, RT_IPC_FLAG_FIFO);
     RT_ASSERT(semaph != RT_NULL);
@@ -264,9 +264,16 @@ void track_resolving_entry(void* parameter)
     RT_ASSERT(mailbox != RT_NULL);
     
     // set uart3 in 115200, 8E1.
-    struct serial_configure config = RT_SERIAL_CONFIG_DEFAULT;
-    config.data_bits = DATA_BITS_8;
-    config.parity = PARITY_NONE;
+//    struct serial_configure config = RT_SERIAL_CONFIG_DEFAULT;
+//    config.data_bits = DATA_BITS_8;
+//    config.parity = PARITY_NONE;
+//    rt_device_control(dev, RT_DEVICE_CTRL_CONFIG, &config);
+
+		//uart3 baud_rate 57600  parity_even
+		struct serial_configure config = RT_SERIAL_CONFIG_DEFAULT;
+    config.baud_rate = BAUD_RATE_57600;
+		config.data_bits = DATA_BITS_9;
+		config.parity    = PARITY_EVEN;
     rt_device_control(dev, RT_DEVICE_CTRL_CONFIG, &config);
     
     rt_device_set_rx_indicate(dev, uart_hook_callback);
