@@ -16,7 +16,7 @@
 /* defined the LED0 pin: PE4 */
 #define LED0_PIN    GET_PIN(E, 4)
 #define RXBUFF_SIZE (1024)
-#define MVBUFF_SIZE (512)
+#define MVBUFF_SIZE (1024)
 
 
 static rt_device_t  pUart2 = RT_NULL;
@@ -293,16 +293,13 @@ static void uart2_rx_entry(void* parameter)
                     if (!pkg) {rt_kprintf("tRX2: no mem for TX4\n"); continue;}
 
                     rt_memcpy(ppkg, pbuf+rxInBuf, mavsz);
-                    
                     float fVal = 0.0f;
                     rt_uint8_t   SGBC32[5] = {0xE1, 0x1E, 0x00, 0xF1, 0x1F};
                     fVal = *(float*)&ppkg[6];
                     rt_kprintf("tRX2: CTRL(%d)\n", (rt_uint8_t)fVal);
                     SGBC32[2] = (rt_uint8_t)fVal;
-                    
                     rt_memcpy(pkg, SGBC32, sizeof(SGBC32));
-										print_rawdata(pkg, sizeof(SGBC32), "tx2_rx4");
-                    
+										//print_rawdata(pkg, sizeof(SGBC32), "tx2_rx4");
                     if (RT_EOK != rt_mb_send(mbUart4Tx, (rt_ubase_t)pkg)){
                         rt_kprintf("tRX2: mb wrong for TX4\n");
                         rt_mp_free(pkg);
@@ -314,7 +311,7 @@ static void uart2_rx_entry(void* parameter)
                 if (!pkg) {rt_kprintf("tRX2: no mem for TX3\n"); continue;}
 
                 rt_memcpy(ppkg, pbuf+rxInBuf, mavsz);
-                print_rawdata(ppkg, mavsz, "tx2_rx3");
+                //print_rawdata(ppkg, mavsz, "tx2_rx3");
                 //rt_kprintf("rx3(mavlink): id(%d) len(%d)\n", ppkg[5], mavsz);
 
                 rt_memcpy(pkg, ppkg, mavsz);
@@ -430,7 +427,7 @@ static void uart3_rx_entry(void* parameter)
                
                 rt_memcpy(ppkg, pbuf+rxInBuf, mavsz);
 							 
-							 print_rawdata(ppkg, mavsz, "tx3_rx2");
+							 //print_rawdata(ppkg, mavsz, "tx3_rx2");
                
                 if (ppkg[5] == 87) {
                     // discard, MSG87 will send by tRX4.
@@ -501,7 +498,7 @@ static void uart4_rx_entry(void* parameter)
         // add some code to process the frame data.
         if (bufsz != 0) {
             
-            print_rawdata(pbuf, 6, "tx4_rx2");
+            //print_rawdata(pbuf, 6, "tx4_rx2");
             
             int lat = *(rt_int16_t*)&pbuf[4];
             int lon = *(rt_int16_t*)&pbuf[2];

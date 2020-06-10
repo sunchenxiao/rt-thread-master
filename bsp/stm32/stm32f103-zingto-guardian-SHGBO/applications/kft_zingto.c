@@ -224,7 +224,7 @@ void zingto_resolving_entry(void* parameter)
             trck_request = RT_TRUE;
             break;
         case 0x0E:  // capture
-            env->trck_action = TRACK_ACTION_SNAP;
+            env->trck_action = TRACK_ACTION_CAPTURE;
             trck_request = RT_TRUE;
             break;
         case 0x11:

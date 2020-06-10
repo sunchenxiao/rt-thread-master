@@ -293,7 +293,7 @@ void sbus_resolving_entry(void* parameter)
                     
                     if (env->ch_status[i] == SBUS_HIGH)
                     {
-                        env->trck_action = TRACK_ACTION_SNAP;       // Use SHGBO Tracker to store video and picture.
+                        env->trck_action = TRACK_ACTION_CAPTURE;       // Use SHGBO Tracker to store video and picture.
                         trck_request = RT_TRUE;
                     }
                     else if (env->ch_status[i] == SBUS_LOW)
