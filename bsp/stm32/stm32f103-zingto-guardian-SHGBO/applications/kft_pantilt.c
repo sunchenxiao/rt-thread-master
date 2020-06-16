@@ -143,6 +143,7 @@ static void pantilt_data_send_entry(void* parameter)
     rt_ubase_t mail;
     rt_uint8_t* pbuf;
     rt_device_t dev = RT_NULL;
+		rt_device_t dev5 = RT_NULL;
     rt_uint32_t ubase32 = 0;
     rt_uint16_t ubase16 = 0;
     
@@ -151,6 +152,9 @@ static void pantilt_data_send_entry(void* parameter)
     
     dev = rt_device_find(PANTILT_UARTPORT_NAME);
     RT_ASSERT(dev != RT_NULL);
+	
+		dev5 = rt_device_find("uart5");
+    RT_ASSERT(dev5 != RT_NULL);
     
     LOG_I("send sub-thread, start!");
     
@@ -173,7 +177,7 @@ static void pantilt_data_send_entry(void* parameter)
         else if(ubase16 == IRSENSOR_COLOR_PKT_HEADER)
         {
             LOG_D("send to irsensor color");
-            rt_device_write(dev, 0, pbuf, IRSENSOR_COLOR_PKT_SIZE);
+            rt_device_write(dev5, 0, pbuf, IRSENSOR_COLOR_PKT_SIZE);
         }
         else if(ubase16 == IRSENSOR_ZOOM_PKT_HEADER)
         {
