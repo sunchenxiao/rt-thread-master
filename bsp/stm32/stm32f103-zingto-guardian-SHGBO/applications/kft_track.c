@@ -114,6 +114,7 @@ static void track_data_recv_entry(void* parameter)
     rt_device_t dev = RT_NULL;
     static shb_serialctrlpkt ctrlpkt;
     rt_size_t pktsz;
+    rt_uint8_t lost_count = 0;
     rt_bool_t on_tracing = RT_FALSE;
     
     PID_t pid_x, pid_y;
@@ -127,8 +128,8 @@ static void track_data_recv_entry(void* parameter)
     dev = rt_device_find(TRACK_UARTPORT_NAME);
     RT_ASSERT(dev != RT_NULL);
 		
-    pid_init(&pid_x, 1.4f, 0.02f, 0.5f);
-    pid_init(&pid_y, 1.4f, 0.02f, 0.5f);
+    pid_init(&pid_x, 1.4f, 0.005f, 0.05f);
+    pid_init(&pid_y, 1.4f, 0.005f, 0.05f);
     
     pid_setThreshold(&pid_x, 500.0f, 200.0f, 10.0f);
     pid_setThreshold(&pid_y, 500.0f, 200.0f, 10.0f);
@@ -166,17 +167,19 @@ static void track_data_recv_entry(void* parameter)
         szbuf = 0;
         // check packet addr byte, shouled 0x01.
         if (pbuf[1] != TRACK_ACK_PKT_ADDR) {
+            LOG_D("tracing packet addr %d, error\n", pbuf[1]);
             continue;
         }
         
         if ((pbuf[6] & 0x02) != 0x00)
         {
             on_tracing = RT_TRUE;
+            lost_count = 0;
             
             float deffer_x, deffer_y;
             
-            deffer_x = -(float)*(rt_int16_t*)&pbuf[2];
-            deffer_y = -(float)*(rt_int16_t*)&pbuf[4];
+            deffer_x = (float)*(rt_int16_t*)&pbuf[2];
+            deffer_y = (float)*(rt_int16_t*)&pbuf[4];
             
             env->trck_err_x = pid_update(&pid_x, deffer_x);
 						env->trck_err_y = pid_update(&pid_y, deffer_y);
@@ -189,8 +192,14 @@ static void track_data_recv_entry(void* parameter)
         {
             if (on_tracing == RT_FALSE)
                 continue;
-						
+            
+            if (lost_count++ < 1)
+                continue;
+            
             on_tracing = RT_FALSE;
+            
+            pid_setICS(&pid_x, 0.0f);
+            pid_setICS(&pid_y, 0.0f);
             
             if (env->trck_incharge == RT_TRUE)
             {
@@ -211,14 +220,14 @@ static void track_data_recv_entry(void* parameter)
                 ptr = rt_mp_alloc(mempool, RT_WAITING_FOREVER);
                 rt_memcpy(ptr, &ctrlpkt, pktsz);
                 rt_mb_send(mailbox, (rt_ubase_t)ptr);
-            }
-						
-						/* stop PanTiltZoom */
-            env->trck_err_x = 0;
-            env->trck_err_y = 0;
-            rt_sem_release(env->sh_ptz);
                 
-            LOG_D("tracing target lost");
+                /* stop PanTiltZoom */
+                env->trck_err_x = 0;
+                env->trck_err_y = 0;
+                rt_sem_release(env->sh_ptz);
+                
+                LOG_D("tracing target lost");
+            }
         }
             
         // got a complete packet, decode now.
@@ -261,11 +270,11 @@ void track_resolving_entry(void* parameter)
 //    rt_device_control(dev, RT_DEVICE_CTRL_CONFIG, &config);
 
 		//uart3 baud_rate 57600  parity_even
-//		struct serial_configure config = RT_SERIAL_CONFIG_DEFAULT;
-//    config.baud_rate = BAUD_RATE_57600;
-//		config.data_bits = DATA_BITS_9;
-//		config.parity    = PARITY_EVEN;
-//    rt_device_control(dev, RT_DEVICE_CTRL_CONFIG, &config);
+		struct serial_configure config = RT_SERIAL_CONFIG_DEFAULT;
+    config.baud_rate = BAUD_RATE_57600;
+		config.data_bits = DATA_BITS_9;
+		config.parity    = PARITY_EVEN;
+    rt_device_control(dev, RT_DEVICE_CTRL_CONFIG, &config);
     
     rt_device_set_rx_indicate(dev, uart_hook_callback);
     
@@ -294,32 +303,24 @@ void track_resolving_entry(void* parameter)
         ctrlpkt.HEADER = 0x7E7E;
         ctrlpkt.ADDR = 0x44;
         
-        if (env->trck_action == TRACK_ACTION_ZOOM_SHOW)
-        {
-						ctrlpkt.__reserved1 = 0x14;	
-						ctrlpkt.set_mode = 0x83;
-						ctrlpkt.set_fuction = 0x21;
-            float  zoomf32 = env->cam_zoom_pos + 1;
-						rt_memcpy(ctrlpkt.__reserved8 + 4, &zoomf32, 4);            
-        }
-        else if (env->trck_action == TRACK_ACTION_PREPARE)
+        if (env->trck_action == TRACK_ACTION_PREPARE)
         {
             ctrlpkt.set_mode = 0x71;
             ctrlpkt.set_fuction = 0xFF;
             
-            LOG_D("TRACK_ACTION_PREPAREHAL");
+            LOG_D("tracker searching target.");
             
             env->trck_prepare = RT_TRUE;
         }
         else if (env->trck_action == TRACK_ACTION_TRACE_START)
         {
-						ctrlpkt.set_mode = 0x71;			// 0x71 Trace Mode.
-						ctrlpkt.set_fuction = 0xFE;
-						ctrlpkt.start_trace = 0x01;			// 0: OFF; 1: ON.
-						ctrlpkt.__reserved3 = 0x01;
-						ctrlpkt.set_trace_mode = 0x38;		// medium size trace window.    // 0x3C: S,M,L     0x38: M,L    0x2C: S,M
+			ctrlpkt.set_mode = 0x71;			// 0x71 Trace Mode.
+			ctrlpkt.set_fuction = 0xFE;
+			ctrlpkt.start_trace = 0x01;			// 0: OFF; 1: ON.
+			ctrlpkt.__reserved3 = 0x01;
+			ctrlpkt.set_trace_mode = 0x3C;		// medium size trace window.
             
-            LOG_D("TRACK_ACTION_TRACE_START");
+            LOG_D("tracker start tracing.");
             
             env->trck_prepare = RT_FALSE;
             env->trck_incharge = RT_TRUE;
@@ -328,17 +329,10 @@ void track_resolving_entry(void* parameter)
         {
             ctrlpkt.set_mode = 0x26;			// 0x71 Trace Mode.
             
-            LOG_D("TRACK_ACTION_TRACE_STOP");
+            LOG_D("tracker stop tracing.");
             
             env->trck_prepare = RT_FALSE;
             env->trck_incharge = RT_FALSE;
-        }
-        else if (env->trck_action == TRACK_ACTION_CAPTURE)
-        {
-            ctrlpkt.set_mode = 0x7C;
-            ctrlpkt.set_fuction = 0x02;
-            
-            LOG_D("TRACK_ACTION_CAPTURE");
         }
         else if (env->trck_action == TRACK_ACTION_RECORD_ON)
         {
@@ -346,13 +340,20 @@ void track_resolving_entry(void* parameter)
             ctrlpkt.set_fuction = 0x01;
             ctrlpkt.set_offset_x = 0x0258;
             
-            LOG_D("TRACK_ACTION_RECORD_ON");
+            LOG_D("tracker start recording video.");
         }
         else if (env->trck_action == TRACK_ACTION_RECORD_OFF)
         {
             ctrlpkt.set_mode = 0x7C;
             
-            LOG_D("TRACK_ACTION_RECORD_OFF");
+            LOG_D("tracker stop recording video.");
+        }
+        else if (env->trck_action == TRACK_ACTION_SNAP)
+        {
+            ctrlpkt.set_mode = 0x7C;
+            ctrlpkt.set_fuction = 0x02;
+            
+            LOG_D("tracker snap a picture.");
         }
         else
             continue;

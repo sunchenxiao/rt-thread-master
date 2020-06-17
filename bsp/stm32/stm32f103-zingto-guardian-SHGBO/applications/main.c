@@ -88,14 +88,6 @@ int main(void)
         RT_ASSERT(result == RT_EOK);
     }
     
-    rt_thread_delay(RT_TICK_PER_SECOND);
-    
-    rt_event_send(env.ev_camera, CAMERA_CMD_ZOOM_GETPOS); // notify the Camera.
-    
-    rt_thread_delay(RT_TICK_PER_SECOND * 10);
-    env.ptz_action = PANTILT_ACTION_SHOWTEMP;
-    rt_sem_release(env.sh_ptz);
-		
     while(RT_TRUE)
     {
         rt_thread_delay(RT_TICK_PER_SECOND / 10);
