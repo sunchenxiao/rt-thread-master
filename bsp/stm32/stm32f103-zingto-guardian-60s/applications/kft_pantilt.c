@@ -61,7 +61,7 @@ rt_uint8_t irs_serialctrlpkt[IRSENSOR_COLOR_PKT_SIZE] = {0xAA, 0x05, 0x01, 0x42,
 
 #define PTZ_ASK_PKT_SIZE (5)  
 
-rt_uint8_t ptz_askctrlpkt[PTZ_ASK_PKT_SIZE] = {0xE1,0x1E,0x12,0xF1,0x1F}; //询问激光数据为0x15 询问毛子原版数据为0x12
+rt_uint8_t ptz_askctrlpkt[PTZ_ASK_PKT_SIZE] = {0xE1,0x1E,0x15,0xF1,0x1F};
 
 #define IRSENSOR_ZOOM_PKT_SIZE  (16)
 
@@ -110,8 +110,7 @@ rt_uint8_t calib_protcol[4][PANTILT_CALIB_PKT_SIZE] = {
 #define PANTILT_VALUE_RATIO     (0.7142857f)
 
 #define ANSWER_PKT_HEADER0		(0x3E)
-#define ANSWER_PKT_SIZE				(129)
-#define ANSWER_PKT_SIZE1			(6)
+#define ANSWER_PKT_SIZE			(6)
 
 /* defined the LED pin: PA0 */
 #define LED_PIN    GET_PIN(A, 0)
@@ -224,13 +223,9 @@ static void pantilt_data_recv_entry(void* parameter)
 	
     LOG_I("recv sub-thread, start!");
 	
-	
-		
-    
     while (1)
     {
-				//激光数据
-        /*result = rt_sem_take(semaph, RT_WAITING_FOREVER);
+        result = rt_sem_take(semaph, RT_WAITING_FOREVER);
         
         if(result == -RT_ETIMEOUT)
             continue;
@@ -243,31 +238,6 @@ static void pantilt_data_recv_entry(void* parameter)
 //                szbuf = 0;
             break;
         default:
-            szbuf += rt_device_read(dev, 0, pbuf + szbuf, ANSWER_PKT_SIZE1 - szbuf);
-            break;
-        }
-				if (szbuf != ANSWER_PKT_SIZE1)
-            continue;
-        
-        szbuf = 0;
-        
-				rt_device_write(dev1, 0, pbuf, ANSWER_PKT_SIZE1); */
-				
-				
-				//原版数据
-				result = rt_sem_take(semaph, RT_WAITING_FOREVER);
-        
-        if(result == -RT_ETIMEOUT)
-            continue;
-        
-        switch (szbuf){
-        case 0:
-        case 1:
-            szbuf += rt_device_read(dev, 0, pbuf + szbuf, 1);
-            if (pbuf[0] != ANSWER_PKT_HEADER0)
-                szbuf = 0;
-            break;
-        default:
             szbuf += rt_device_read(dev, 0, pbuf + szbuf, ANSWER_PKT_SIZE - szbuf);
             break;
         }
@@ -275,14 +245,8 @@ static void pantilt_data_recv_entry(void* parameter)
             continue;
         
         szbuf = 0;
-				
-        //yaw 40 41     pitch 69 70
-				rt_uint8_t send_data[6]={0x00,0x00,0x00,0x00,0x00,0x00};
-				send_data[2]=pbuf[69];
-				send_data[3]=pbuf[70];
-				send_data[4]=pbuf[40];
-				send_data[5]=pbuf[41];
-				rt_device_write(dev1, 0, send_data, 6); 
+        
+				rt_device_write(dev1, 0, pbuf, ANSWER_PKT_SIZE); 
     }
 }
 

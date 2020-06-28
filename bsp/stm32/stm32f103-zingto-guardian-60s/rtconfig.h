@@ -16,7 +16,6 @@
 #define RT_USING_IDLE_HOOK
 #define RT_IDLE_HOOK_LIST_SIZE 4
 #define IDLE_THREAD_STACK_SIZE 256
-#define RT_DEBUG
 
 /* Inter-Thread communication */
 
@@ -36,9 +35,6 @@
 /* Kernel Device Object */
 
 #define RT_USING_DEVICE
-#define RT_USING_CONSOLE
-#define RT_CONSOLEBUF_SIZE 256
-#define RT_CONSOLE_DEVICE_NAME "uart5"
 #define RT_VER_NUM 0x40003
 #define ARCH_ARM
 #define RT_USING_CPU_FFS
@@ -57,18 +53,6 @@
 
 /* Command shell */
 
-#define RT_USING_FINSH
-#define FINSH_THREAD_NAME "tshell"
-#define FINSH_USING_HISTORY
-#define FINSH_HISTORY_LINES 5
-#define FINSH_USING_SYMTAB
-#define FINSH_USING_DESCRIPTION
-#define FINSH_THREAD_PRIORITY 20
-#define FINSH_THREAD_STACK_SIZE 4096
-#define FINSH_CMD_SIZE 80
-#define FINSH_USING_MSH
-#define FINSH_USING_MSH_DEFAULT
-#define FINSH_ARG_MAX 10
 
 /* Device virtual file system */
 
@@ -113,19 +97,6 @@
 
 /* Utilities */
 
-#define RT_USING_ULOG
-#define ULOG_OUTPUT_LVL_D
-#define ULOG_OUTPUT_LVL 7
-#define ULOG_ASSERT_ENABLE
-#define ULOG_LINE_BUF_SIZE 256
-
-/* log format */
-
-#define ULOG_USING_COLOR
-#define ULOG_OUTPUT_TIME
-#define ULOG_OUTPUT_LEVEL
-#define ULOG_OUTPUT_TAG
-#define ULOG_BACKEND_USING_CONSOLE
 
 /* RT-Thread online packages */
 
@@ -157,12 +128,6 @@
 
 /* system packages */
 
-#define PKG_USING_SYS_LOAD_MONITOR
-#define SYS_LOAD_MONITOR_FREQ 1
-#define SYS_LOAD_MONITOR_TIME 20
-#define SYS_LOAD_MONITOR_MAX_THREAD 5
-#define SYS_LOAD_MONITOR_USING_TEST
-#define PKG_USING_SYS_LOAD_MONITOR_V100
 
 /* peripheral libraries and drivers */
 

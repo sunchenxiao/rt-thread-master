@@ -74,8 +74,8 @@ typedef struct __ELAI_ResponsePacket
 }ELAI_ResponsePacket;
 #pragma pack()
 
-#define ELAI_PACKET_HEADER              ('@')
-#define ELAI_PACKET_TAIL                ('#')
+#define ELAI_PACKET_HEADER              ('@') //0x40
+#define ELAI_PACKET_TAIL                ('#') //0x23
 
 static rt_sem_t         __semaphore = RT_NULL;
 static rt_event_t       __event = RT_NULL;
@@ -232,7 +232,7 @@ static void trace_control_entry(void* parameter)
             rt_thread_delay(RT_TICK_PER_SECOND);
             continue;
         }
-        
+        rt_memset(&response, 0x00, sizeof(ELAI_ResponsePacket));
         rt_memcpy(&response, pbuf, sizeof(ELAI_ResponsePacket));
         
         if (response.TAIL != ELAI_PACKET_TAIL) {

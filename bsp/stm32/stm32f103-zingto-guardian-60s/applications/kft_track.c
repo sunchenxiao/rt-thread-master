@@ -193,9 +193,8 @@ static void track_data_recv_entry(void* parameter)
             if (on_tracing == RT_FALSE)
                 continue;
             
-            if (lost_count++ < 1)
-                continue;
-            
+            on_tracing = RT_FALSE;
+
             if (env->trck_incharge == RT_TRUE)
             {
                 env->trck_lost = RT_TRUE;
@@ -217,6 +216,7 @@ static void track_data_recv_entry(void* parameter)
                 rt_mb_send(mailbox, (rt_ubase_t)ptr);
                 
             }
+						
 						/* stop PanTiltZoom */
                 env->trck_err_x = 0;
                 env->trck_err_y = 0;
@@ -313,7 +313,7 @@ void track_resolving_entry(void* parameter)
 			ctrlpkt.set_fuction = 0xFE;
 			ctrlpkt.start_trace = 0x01;			// 0: OFF; 1: ON.
 			ctrlpkt.__reserved3 = 0x01;
-			ctrlpkt.set_trace_mode = 0x38;		// medium size trace window.   // 0x3C: S,M,L     0x38: M,L    0x2C: S,M
+			ctrlpkt.set_trace_mode = 0x38;		// medium size trace window.  // 0x3C: S,M,L     0x38: M,L    0x2C: S,M
             
             LOG_D("tracker start tracing.");
             
