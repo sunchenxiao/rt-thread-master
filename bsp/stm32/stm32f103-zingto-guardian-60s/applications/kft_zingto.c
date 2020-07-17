@@ -135,20 +135,24 @@ void zingto_resolving_entry(void* parameter)
             break;
         case 0x01:  // pitch -
             env->ch_value[1] = SBUS_VALUE_MEDIAN + (SBUS_VALUE_MAXIMUM - SBUS_VALUE_MEDIAN) * speedlv / 10.f;
+						env->ch_value[3] = SBUS_VALUE_MEDIAN;
             env->ptz_action = PANTILT_ACTION_NULL;
             ptz_request = RT_TRUE;
             break;
         case 0x02:  // pitch +
             env->ch_value[1] = SBUS_VALUE_MEDIAN + (SBUS_VALUE_MININUM - SBUS_VALUE_MEDIAN) * speedlv / 10.f;
+						env->ch_value[3] = SBUS_VALUE_MEDIAN;
             env->ptz_action = PANTILT_ACTION_NULL;
             ptz_request = RT_TRUE;
             break;
         case 0x03:  // yaw -
+						env->ch_value[1] = SBUS_VALUE_MEDIAN;
             env->ch_value[3] = SBUS_VALUE_MEDIAN + (SBUS_VALUE_MAXIMUM - SBUS_VALUE_MEDIAN) * speedlv / 10.f;
             env->ptz_action = PANTILT_ACTION_NULL;
             ptz_request = RT_TRUE;
             break;
         case 0x04:  // yaw +
+						env->ch_value[1] = SBUS_VALUE_MEDIAN;
             env->ch_value[3] = SBUS_VALUE_MEDIAN + (SBUS_VALUE_MININUM - SBUS_VALUE_MEDIAN) * speedlv / 10.f;
             env->ptz_action = PANTILT_ACTION_NULL;
             ptz_request = RT_TRUE;
@@ -200,15 +204,15 @@ void zingto_resolving_entry(void* parameter)
             cam_request = RT_TRUE;
             break;
         case 0x08:  // head free.
-            env->ptz_action = PANTILT_ACTION_HEADFREE;
+            env->ptz_mode = PANTILT_MODE_HEADFREE;
             ptz_request = RT_TRUE;
             break;
         case 0x09:  // head lock.
-            env->ptz_action = PANTILT_ACTION_HEADLOCK;
+            env->ptz_mode = PANTILT_MODE_HEADLOCK;
             ptz_request = RT_TRUE;
             break;
         case 0x0A:  // head down.
-            env->ptz_action = PANTILT_ACTION_HEADDOWN;
+            env->ptz_mode = PANTILT_MODE_HEADDOWN;
             ptz_request = RT_TRUE;
             break;
         case 0x0B:  // homing.
@@ -216,16 +220,19 @@ void zingto_resolving_entry(void* parameter)
             ptz_request = RT_TRUE;
             break;
         case 0x0C:  // record on
-            env->trck_action = TRACK_ACTION_RECORD_ON;
-            trck_request = RT_TRUE;
+            env->cam_zoom_speed = 0;
+            cam_eval = CAMERA_CMD_RECORD_ON;
+            cam_request = RT_TRUE;
             break;
         case 0x0D:  // record off
-            env->trck_action = TRACK_ACTION_RECORD_OFF;
-            trck_request = RT_TRUE;
+            env->cam_zoom_speed = 0;
+            cam_eval = CAMERA_CMD_RECORD_OFF;
+            cam_request = RT_TRUE;
             break;
         case 0x0E:  // capture
-            env->trck_action = TRACK_ACTION_SNAP;
-            trck_request = RT_TRUE;
+            env->cam_zoom_speed = 0;
+            cam_eval = CAMERA_CMD_CAPTURE;
+            cam_request = RT_TRUE;
             break;
         case 0x11:
             LOG_W("calibrate gyro temp");

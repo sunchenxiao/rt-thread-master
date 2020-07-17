@@ -61,7 +61,7 @@ rt_uint8_t irs_serialctrlpkt[IRSENSOR_COLOR_PKT_SIZE] = {0xAA, 0x05, 0x01, 0x42,
 
 #define PTZ_ASK_PKT_SIZE (5)  
 
-rt_uint8_t ptz_askctrlpkt[PTZ_ASK_PKT_SIZE] = {0xE1,0x1E,0x12,0xF1,0x1F}; //询问激光数据为0x15 询问毛子原版数据为0x12
+rt_uint8_t ptz_askctrlpkt[PTZ_ASK_PKT_SIZE] = {0xE1,0x1E,0x15,0xF1,0x1F}; //询问激光数据为0x15 询问毛子原版数据为0x12
 
 #define IRSENSOR_ZOOM_PKT_SIZE  (16)
 
@@ -144,7 +144,7 @@ static void pantilt_data_send_entry(void* parameter)
     rt_ubase_t mail;
     rt_uint8_t* pbuf;
     rt_device_t dev = RT_NULL;
-		rt_device_t dev5 = RT_NULL;
+		rt_device_t dev3 = RT_NULL;
     rt_uint32_t ubase32 = 0;
     rt_uint16_t ubase16 = 0;
     
@@ -154,7 +154,7 @@ static void pantilt_data_send_entry(void* parameter)
     dev = rt_device_find(PANTILT_UARTPORT_NAME);
     RT_ASSERT(dev != RT_NULL);
 	
-		dev5 = rt_device_find("uart5");
+		dev3 = rt_device_find("uart3");
     RT_ASSERT(dev5 != RT_NULL);
     
     LOG_I("send sub-thread, start!");
@@ -178,7 +178,7 @@ static void pantilt_data_send_entry(void* parameter)
         else if(ubase16 == IRSENSOR_COLOR_PKT_HEADER)
         {
             LOG_D("send to irsensor color");
-            rt_device_write(dev5, 0, pbuf, IRSENSOR_COLOR_PKT_SIZE);
+            rt_device_write(dev, 0, pbuf, IRSENSOR_COLOR_PKT_SIZE);
         }
         else if(ubase16 == IRSENSOR_ZOOM_PKT_HEADER)
         {
@@ -230,7 +230,7 @@ static void pantilt_data_recv_entry(void* parameter)
     while (1)
     {
 				//激光数据
-        /*result = rt_sem_take(semaph, RT_WAITING_FOREVER);
+        result = rt_sem_take(semaph, RT_WAITING_FOREVER);
         
         if(result == -RT_ETIMEOUT)
             continue;
@@ -251,11 +251,11 @@ static void pantilt_data_recv_entry(void* parameter)
         
         szbuf = 0;
         
-				rt_device_write(dev1, 0, pbuf, ANSWER_PKT_SIZE1); */
+				rt_device_write(dev1, 0, pbuf, ANSWER_PKT_SIZE1);
 				
 				
 				//原版数据
-				result = rt_sem_take(semaph, RT_WAITING_FOREVER);
+				/*result = rt_sem_take(semaph, RT_WAITING_FOREVER);
         
         if(result == -RT_ETIMEOUT)
             continue;
@@ -276,13 +276,13 @@ static void pantilt_data_recv_entry(void* parameter)
         
         szbuf = 0;
 				
-        //yaw 40 41     pitch 69 70
+        //yaw 71 72     pitch 69 70
 				rt_uint8_t send_data[6]={0x00,0x00,0x00,0x00,0x00,0x00};
 				send_data[2]=pbuf[69];
 				send_data[3]=pbuf[70];
-				send_data[4]=pbuf[40];
-				send_data[5]=pbuf[41];
-				rt_device_write(dev1, 0, send_data, 6); 
+				send_data[4]=pbuf[71];
+				send_data[5]=pbuf[72];
+				rt_device_write(dev1, 0, send_data, 6);*/
     }
 }
 
@@ -365,6 +365,13 @@ void pantilt_resolving_entry(void* parameter)
                     break;
             }
 
+						if (env->ptz_mode == PANTILT_MODE_HEADFREE)
+								ctrlpkt.mode = 0x0000;
+						else if (env->ptz_mode == PANTILT_MODE_HEADLOCK)
+								ctrlpkt.mode = 0x6400;               
+						else if (env->ptz_mode == PANTILT_MODE_HEADDOWN)
+								ctrlpkt.mode = 0x9BFE;
+								
             pantilt_update_checksum(&ctrlpkt);
                
             pbuf = rt_mp_alloc(mempool, RT_WAITING_FOREVER);
@@ -377,6 +384,10 @@ void pantilt_resolving_entry(void* parameter)
                 env->trck_lost = RT_FALSE;
                 
                 pbuf = rt_mp_alloc(mempool, RT_WAITING_FOREVER);
+                rt_memcpy(pbuf, &ctrlpkt, pktsz);
+                rt_mb_send(mailbox, (rt_ubase_t)pbuf);
+							
+								pbuf = rt_mp_alloc(mempool, RT_WAITING_FOREVER);
                 rt_memcpy(pbuf, &ctrlpkt, pktsz);
                 rt_mb_send(mailbox, (rt_ubase_t)pbuf);
             }
@@ -435,27 +446,42 @@ void pantilt_resolving_entry(void* parameter)
             else if (env->ptz_action == PANTILT_ACTION_HOMING)
             {
                 LOG_D("PANTILT_ACTION_HOMING");
-                
-                pktsz = sizeof(ptz_serialctrlpkt);
-                
-                rt_memset(&ctrlpkt, 0x00, pktsz);
-                ctrlpkt.HEADER = PANTILT_PKT_HEADER;
-                
-                ctrlpkt.homing = 0x9BFE;
-                pantilt_update_checksum(&ctrlpkt);
-                pbuf = rt_mp_alloc(mempool, RT_WAITING_FOREVER);
-                rt_memcpy(pbuf, &ctrlpkt, pktsz);
-                rt_mb_send(mailbox, (rt_ubase_t)pbuf);
-                
-                rt_thread_delay(100);
-                
-                rt_memset(&ctrlpkt, 0x00, pktsz);
-                ctrlpkt.HEADER = PANTILT_PKT_HEADER;               
-                ctrlpkt.homing = 0x0000;
-                pantilt_update_checksum(&ctrlpkt);
-                pbuf = rt_mp_alloc(mempool, RT_WAITING_FOREVER);
-                rt_memcpy(pbuf, &ctrlpkt, pktsz);
-                rt_mb_send(mailbox, (rt_ubase_t)pbuf);
+								env->ptz_action = PANTILT_ACTION_NULL;
+								
+								pktsz = sizeof(ptz_serialctrlpkt);
+								rt_memset(&ctrlpkt, 0x00, pktsz);
+								ctrlpkt.HEADER = PANTILT_PKT_HEADER;
+								
+								if (env->ptz_mode == PANTILT_MODE_HEADFREE)
+										ctrlpkt.mode = 0x0000;
+								else if (env->ptz_mode == PANTILT_MODE_HEADLOCK)
+										ctrlpkt.mode = 0x6400;               
+								else if (env->ptz_mode == PANTILT_MODE_HEADDOWN)
+										ctrlpkt.mode = 0x9BFE;
+								
+								ctrlpkt.homing = 0x9BFE;
+								pantilt_update_checksum(&ctrlpkt);
+								pbuf = rt_mp_alloc(mempool, RT_WAITING_FOREVER);
+								rt_memcpy(pbuf, &ctrlpkt, pktsz);
+								rt_mb_send(mailbox, (rt_ubase_t)pbuf);
+								
+								rt_thread_delay(100);
+								
+								rt_memset(&ctrlpkt, 0x00, pktsz);
+								ctrlpkt.HEADER = PANTILT_PKT_HEADER;
+
+								if (env->ptz_mode == PANTILT_MODE_HEADFREE)
+										ctrlpkt.mode = 0x0000;
+								else if (env->ptz_mode == PANTILT_MODE_HEADLOCK)
+										ctrlpkt.mode = 0x6400;               
+								else if (env->ptz_mode == PANTILT_MODE_HEADDOWN)
+										ctrlpkt.mode = 0x9BFE;
+										
+								ctrlpkt.homing = 0x0000;
+								pantilt_update_checksum(&ctrlpkt);
+								pbuf = rt_mp_alloc(mempool, RT_WAITING_FOREVER);
+								rt_memcpy(pbuf, &ctrlpkt, pktsz);
+								rt_mb_send(mailbox, (rt_ubase_t)pbuf);
             }
             else
             {
@@ -505,12 +531,12 @@ void pantilt_resolving_entry(void* parameter)
 //                
 //                ctrlpkt.roll = dval_roll;
                 
-                if (env->ptz_action == PANTILT_ACTION_HEADFREE)
-                    ctrlpkt.mode = 0x0000;
-                else if (env->ptz_action == PANTILT_ACTION_HEADLOCK)
-                    ctrlpkt.mode = 0x6400;               
-                else if (env->ptz_action == PANTILT_ACTION_HEADDOWN)
-                    ctrlpkt.mode = 0x9BFE;               
+                if (env->ptz_mode == PANTILT_MODE_HEADFREE)
+										ctrlpkt.mode = 0x0000;
+								else if (env->ptz_mode == PANTILT_MODE_HEADLOCK)
+										ctrlpkt.mode = 0x6400;               
+								else if (env->ptz_mode == PANTILT_MODE_HEADDOWN)
+										ctrlpkt.mode = 0x9BFE;              
                 
                 pantilt_update_checksum(&ctrlpkt);
                    
@@ -606,27 +632,42 @@ void pantilt_resolving_entry(void* parameter)
             else if (env->ptz_action == PANTILT_ACTION_HOMING)
             {
                 LOG_D("PANTILT_ACTION_HOMING");
-                
-                pktsz = sizeof(ptz_serialctrlpkt);
-                
-                rt_memset(&ctrlpkt, 0x00, pktsz);
-                ctrlpkt.HEADER = PANTILT_PKT_HEADER;
-                
-                ctrlpkt.homing = 0x9BFE;
-                pantilt_update_checksum(&ctrlpkt);
-                pbuf = rt_mp_alloc(mempool, RT_WAITING_FOREVER);
-                rt_memcpy(pbuf, &ctrlpkt, pktsz);
-                rt_mb_send(mailbox, (rt_ubase_t)pbuf);
-                
-                rt_thread_delay(100);
-                
-                rt_memset(&ctrlpkt, 0x00, pktsz);
-                ctrlpkt.HEADER = PANTILT_PKT_HEADER;               
-                ctrlpkt.homing = 0x0000;
-                pantilt_update_checksum(&ctrlpkt);
-                pbuf = rt_mp_alloc(mempool, RT_WAITING_FOREVER);
-                rt_memcpy(pbuf, &ctrlpkt, pktsz);
-                rt_mb_send(mailbox, (rt_ubase_t)pbuf);
+								env->ptz_action = PANTILT_ACTION_NULL;
+								
+								pktsz = sizeof(ptz_serialctrlpkt);
+								rt_memset(&ctrlpkt, 0x00, pktsz);
+								ctrlpkt.HEADER = PANTILT_PKT_HEADER;
+								
+								if (env->ptz_mode == PANTILT_MODE_HEADFREE)
+										ctrlpkt.mode = 0x0000;
+								else if (env->ptz_mode == PANTILT_MODE_HEADLOCK)
+										ctrlpkt.mode = 0x6400;               
+								else if (env->ptz_mode == PANTILT_MODE_HEADDOWN)
+										ctrlpkt.mode = 0x9BFE;
+								
+								ctrlpkt.homing = 0x9BFE;
+								pantilt_update_checksum(&ctrlpkt);
+								pbuf = rt_mp_alloc(mempool, RT_WAITING_FOREVER);
+								rt_memcpy(pbuf, &ctrlpkt, pktsz);
+								rt_mb_send(mailbox, (rt_ubase_t)pbuf);
+								
+								rt_thread_delay(100);
+								
+								rt_memset(&ctrlpkt, 0x00, pktsz);
+								ctrlpkt.HEADER = PANTILT_PKT_HEADER;
+
+								if (env->ptz_mode == PANTILT_MODE_HEADFREE)
+										ctrlpkt.mode = 0x0000;
+								else if (env->ptz_mode == PANTILT_MODE_HEADLOCK)
+										ctrlpkt.mode = 0x6400;               
+								else if (env->ptz_mode == PANTILT_MODE_HEADDOWN)
+										ctrlpkt.mode = 0x9BFE;
+										
+								ctrlpkt.homing = 0x0000;
+								pantilt_update_checksum(&ctrlpkt);
+								pbuf = rt_mp_alloc(mempool, RT_WAITING_FOREVER);
+								rt_memcpy(pbuf, &ctrlpkt, pktsz);
+								rt_mb_send(mailbox, (rt_ubase_t)pbuf);
             }
             else
             {
@@ -674,12 +715,12 @@ void pantilt_resolving_entry(void* parameter)
                 
 //                ctrlpkt.roll = dval_roll;
                 
-                if (env->ptz_action == PANTILT_ACTION_HEADFREE)
-                    ctrlpkt.mode = 0x0000;
-                else if (env->ptz_action == PANTILT_ACTION_HEADLOCK)
-                    ctrlpkt.mode = 0x6400;               
-                else if (env->ptz_action == PANTILT_ACTION_HEADDOWN)
-                    ctrlpkt.mode = 0x9BFE;               
+                if (env->ptz_mode == PANTILT_MODE_HEADFREE)
+										ctrlpkt.mode = 0x0000;
+								else if (env->ptz_mode == PANTILT_MODE_HEADLOCK)
+										ctrlpkt.mode = 0x6400;               
+								else if (env->ptz_mode == PANTILT_MODE_HEADDOWN)
+										ctrlpkt.mode = 0x9BFE;             
                 
                 pantilt_update_checksum(&ctrlpkt);
                    

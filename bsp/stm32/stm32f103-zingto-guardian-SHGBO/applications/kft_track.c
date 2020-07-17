@@ -115,6 +115,7 @@ static void track_data_recv_entry(void* parameter)
     static shb_serialctrlpkt ctrlpkt;
     rt_size_t pktsz;
     rt_uint8_t lost_count = 0;
+		rt_uint8_t ctrl_count = 0;
     rt_bool_t on_tracing = RT_FALSE;
     
     PID_t pid_x, pid_y;
@@ -128,11 +129,11 @@ static void track_data_recv_entry(void* parameter)
     dev = rt_device_find(TRACK_UARTPORT_NAME);
     RT_ASSERT(dev != RT_NULL);
 		
-    pid_init(&pid_x, 1.4f, 0.005f, 0.05f);
-    pid_init(&pid_y, 1.4f, 0.005f, 0.05f);
+    pid_init(&pid_x, 1.4f, 0.02f, 0.5f);
+    pid_init(&pid_y, 1.4f, 0.02f, 0.5f);
     
-    pid_setThreshold(&pid_x, 500.0f, 200.0f, 10.0f);
-    pid_setThreshold(&pid_y, 500.0f, 200.0f, 10.0f);
+    pid_setThreshold(&pid_x, 500.0f, 200.0f, 0.02f);
+    pid_setThreshold(&pid_y, 500.0f, 200.0f, 0.02f);
     
     pid_setSetpoint(&pid_x, 0.0f);
     pid_setSetpoint(&pid_y, 0.0f);
@@ -186,7 +187,12 @@ static void track_data_recv_entry(void* parameter)
             
             LOG_D("tracing %d %d", env->trck_err_x, env->trck_err_y);
             
-            rt_sem_release(env->sh_ptz);
+            if ( ctrl_count < 11)
+                ctrl_count++;
+            else {
+                rt_sem_release(env->sh_ptz);
+                ctrl_count = 0;
+            }
         }
         else
         {

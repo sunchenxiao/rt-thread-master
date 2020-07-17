@@ -33,7 +33,7 @@ void sbus_resolving_entry(void* parameter);
 #define SBUS_THRESHOLD_INVAILED     (50)
 
 #define SBUS_VALUE_MEDIAN           (1000)
-#define SBUS_VALUE_IGNORE           (20)
+#define SBUS_VALUE_IGNORE           (50)
 #define SBUS_VALUE_MAXIMUM          (1700)
 #define SBUS_VALUE_MININUM          (300)
 
@@ -68,6 +68,10 @@ void pantilt_resolving_entry(void* parameter);
 #define PANTILT_ACTION_IRZOOM           (0x06)
 #define PANTILT_ACTION_CALIBRATE        (0x07)
 #define PANTILT_ACTION_ASK     			    (0x08)
+
+#define PANTILT_MODE_HEADDOWN      	    (0x02)
+#define PANTILT_MODE_HEADLOCK      	    (0x03)
+#define PANTILT_MODE_HEADFREE      	    (0x04)
 
 /* track kernel function thread */
 void track_resolving_entry(void* parameter);
@@ -105,6 +109,7 @@ struct guardian_environment
     rt_uint8_t      ptz_action;
     rt_uint8_t      irs_color;
     rt_uint8_t      irs_zoom;
+		rt_uint8_t      ptz_mode;
     rt_sem_t        sh_ptz;
     
     // User
