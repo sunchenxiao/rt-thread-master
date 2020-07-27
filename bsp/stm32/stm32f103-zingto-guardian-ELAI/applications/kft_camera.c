@@ -20,21 +20,21 @@
 #define DBG_COLOR
 #include <rtdbg.h>
 
-#ifdef USE_HU_CAMERA
+const char XUANZHAN_CMD_SNAP[] = "<snap quality=\"10\" ></snap>\r\n";
+const char XUANZHAN_CMD_RECORD_ON[] = "<?xml version=\"1.0\" encoding=\"GB2312\" ?><?xml version=\"1.0\" encoding=\"GB2312\" ?><record cmd=\"start\"></record>\r\n";
+const char XUANZHAN_CMD_RECORD_OFF[] = "<?xml version=\"1.0\" encoding=\"GB2312\" ?><?xml version=\"1.0\" encoding=\"GB2312\" ?><record cmd=\"stop\"></record>\r\n";
 
-const rt_uint8_t CAMERA_VISCA_RECORD_ON[] = {0x81, 0x01, 0x05, 0x01, 0x00, 0xFF};
-const rt_uint8_t CAMERA_VISCA_RECORD_OFF[] = {0x81, 0x01, 0x05, 0x01, 0x01, 0xFF};
-const rt_uint8_t CAMERA_VISCA_CAPTURE[] = {0x81, 0x01, 0x05, 0x00, 0x00, 0xFF};
+const char XUANZHAN_LOGO_RECORD_ON[] = "<?xml version=\"1.0\" encoding=\"GB2312\" ?><icon name=\"record_l\"  posx=\"10\" posy=\"10\" cmd=\"show\" ></icon>\r\n";
+const char XUANZHAN_LOGO_RECORD_OFF[] = "<?xml version=\"1.0\" encoding=\"GB2312\" ?><icon name=\"record_l\"  posx=\"10\" posy=\"10\" cmd=\"hide\" ></icon>\r\n";
+const char XUANZHAN_LOGO_SNAP_ON[] = "<?xml version=\"1.0\" encoding=\"GB2312\" ?><icon name=\"photo_l\"  posx=\"10\" posy=\"10\" cmd=\"show\" ></icon>\r\n";
+const char XUANZHAN_LOGO_SNAP_OFF[] = "<?xml version=\"1.0\" encoding=\"GB2312\" ?><icon name=\"photo_l\"  posx=\"10\" posy=\"10\" cmd=\"hide\" ></icon>\r\n";
 
-#endif
-
-
-#define CAMERA_UARTPORT_NAME        "uart5"
-#define CAMERA_SEMAPHORE_NAME       "shCamera"
-#define CAMERA_EVENT_NAME           "evCamera"
+#define CAMERA_UARTPORT_NAME "uart5"
+#define CAMERA_SEMAPHORE_NAME "shCAM"
+#define CAMERA_EVENT_NAME "evCAM"
 
 #define CAMERA_BUFFER_SIZE              (32)
-#define CAMERA_RX_TIMEOUT               (RT_TICK_PER_SECOND / 2)  // almost 0.1s
+#define CAMERA_RX_TIMEOUT               (RT_TICK_PER_SECOND)  // almost 0.3s
 
 #define VISCA_ZOOM_SPEED                (2)
 #define VISCA_SET_ZOOMPOS_CMD_SIZE      (9)
@@ -157,6 +157,26 @@ static rt_err_t uart_recv_with_timeout(rt_device_t dev, void * buffer, const rt_
     
     return result;
 }
+static rt_tick_t tm_snap;
+
+void snap_logo_manager_entry(void* parameter)
+{
+    rt_device_t udev = (rt_device_t)parameter;
+    
+    tm_snap = RT_TICK_MAX;
+    
+    while(1)
+    {
+        if (tm_snap != RT_TICK_MAX) {
+            if (rt_tick_get() - tm_snap > RT_TICK_PER_SECOND) {
+                uart_send_with_block(udev, (void *)XUANZHAN_LOGO_SNAP_OFF, sizeof(XUANZHAN_LOGO_SNAP_OFF));
+                tm_snap = RT_TICK_MAX;
+            }
+        }
+        
+        rt_thread_delay(RT_TICK_PER_SECOND / 100);
+    }
+}
 
 void camera_resolving_entry(void* parameter)
 {
@@ -165,6 +185,7 @@ void camera_resolving_entry(void* parameter)
     struct guardian_environment *env = RT_NULL;
     rt_err_t result = RT_EOK;
     rt_uint32_t opcode;
+    rt_thread_t pthread;
     
     env = (struct guardian_environment *)parameter;
     RT_ASSERT(env != RT_NULL);
@@ -183,11 +204,17 @@ void camera_resolving_entry(void* parameter)
     env->ev_camera = rt_event_create(CAMERA_EVENT_NAME, RT_IPC_FLAG_FIFO);
     RT_ASSERT(env->ev_camera != RT_NULL);
     
-    // set uart5 in 115200, 8N1.
+    // set uart in 115200     , 8N1.
     struct serial_configure config = RT_SERIAL_CONFIG_DEFAULT;
+    config.baud_rate = BAUD_RATE_115200;
     rt_device_control(dev, RT_DEVICE_CTRL_CONFIG, &config);
     
     rt_device_set_rx_indicate(dev, uart_hook_callback);
+    
+    pthread = rt_thread_create("tXZlogo", snap_logo_manager_entry, dev, 2048, 11, 20);
+    RT_ASSERT(pthread != RT_NULL);
+    result = rt_thread_startup(pthread);
+    RT_ASSERT(result == RT_EOK);
     
     LOG_I("initialization finish, start!");
     
@@ -210,7 +237,6 @@ void camera_resolving_entry(void* parameter)
         }
         
         switch(opcode & ~CAMERA_CMD_ZOOM_GETPOS) {
-            // hi3521d ascii command
             case CAMERA_CMD_CAPTURE:
                 #ifdef USE_HU_CAMERA
                     uart_send_with_block(dev, (void *)CAMERA_VISCA_CAPTURE, sizeof(CAMERA_VISCA_CAPTURE));
@@ -386,27 +412,21 @@ void camera_resolving_entry(void* parameter)
         
         if (opcode & CAMERA_CMD_ZOOM_GETPOS)
         {
-           
-            
             uart_clean_recv_buff(dev, pbuf);
             uart_send_with_block(dev, (rt_uint8_t*)VISCA_GET_ZOOMPOS, sizeof(VISCA_GET_ZOOMPOS));
-            rt_tick_t tmsnap = rt_tick_get();
             LOG_D("VISCA_GET_ZOOM_POS");
-            
+        
             rt_memset(pbuf, 0x00, CAMERA_BUFFER_SIZE);
             result = uart_recv_with_timeout(dev, pbuf, VISCA_GET_ZOOMPOS_ACK_SIZE);
         
-            
             if (result != RT_EOK)
                 LOG_W("timeout!");
-            else if (!(( pbuf[0] == 0x90 ) && ( pbuf[1] == 0x50 ) && ( pbuf[6] == 0xFF))) {
+            else if (!(( pbuf[0] == 0x90 ) && ( pbuf[1] == 0x50 ) && ( pbuf[6] == 0xFF)))
                 LOG_W("invaild data!");
-                ulog_hexdump("VISCA", 16, pbuf, VISCA_GET_ZOOMPOS_ACK_SIZE);
-            }
             else
             {
-                LOG_D("response time: %d", rt_tick_get() - tmsnap);
                 // calculate the zoom position.
+                LOG_D("start calculate zoom position");
                 LOG_D("%02X %02X %02X %02X %02X %02X %02X", \
                     pbuf[0], pbuf[1], pbuf[2], pbuf[3], pbuf[4], pbuf[5], pbuf[6]);
                 
@@ -454,7 +474,7 @@ void camera_resolving_entry(void* parameter)
                     nZoom = 0xFF;   // invailed zoom position.
                 
                 env->cam_zoom_pos = nZoom;
-                LOG_W("zoom, %d", nZoom);
+                LOG_D("zoom, %d", nZoom);
                 
                 env->cam_getpos_tick = rt_tick_get();
 

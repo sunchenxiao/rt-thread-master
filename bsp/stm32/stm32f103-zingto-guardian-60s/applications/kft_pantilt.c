@@ -111,7 +111,8 @@ rt_uint8_t calib_protcol[4][PANTILT_CALIB_PKT_SIZE] = {
 
 #define ANSWER_PKT_HEADER0		(0x3E)
 #define ANSWER_PKT_SIZE				(129)
-#define ANSWER_PKT_SIZE1			(6)
+#define ANSWER_PKT_SIZE1			(8)
+rt_uint8_t send_angle_data[ANSWER_PKT_SIZE1]={0xEE,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
 
 /* defined the LED pin: PA0 */
 #define LED_PIN    GET_PIN(A, 0)
@@ -230,10 +231,13 @@ static void pantilt_data_recv_entry(void* parameter)
     while (1)
     {
 				//激光数据
-        result = rt_sem_take(semaph, RT_WAITING_FOREVER);
+        result = rt_sem_take(semaph, 10);
         
         if(result == -RT_ETIMEOUT)
-            continue;
+				{
+					szbuf=0;
+					continue;
+				}
         
         switch (szbuf){
         case 0:
@@ -243,15 +247,28 @@ static void pantilt_data_recv_entry(void* parameter)
 //                szbuf = 0;
             break;
         default:
-            szbuf += rt_device_read(dev, 0, pbuf + szbuf, ANSWER_PKT_SIZE1 - szbuf);
+            szbuf += rt_device_read(dev, 0, pbuf + szbuf, 6 - szbuf);
             break;
         }
-				if (szbuf != ANSWER_PKT_SIZE1)
+				if (szbuf != 6)
             continue;
         
         szbuf = 0;
-        
-				rt_device_write(dev1, 0, pbuf, ANSWER_PKT_SIZE1);
+        send_angle_data[1]=pbuf[0];
+				send_angle_data[2]=pbuf[1];
+				send_angle_data[3]=pbuf[2];
+				send_angle_data[4]=pbuf[3];
+				send_angle_data[5]=pbuf[4];
+				send_angle_data[6]=pbuf[5];
+				if (env->trck_incharge)
+				{
+					send_angle_data[7]=0x01;
+				}
+				else
+				{
+					send_angle_data[7]=0x00;
+				}
+				rt_device_write(dev1, 0, send_angle_data, ANSWER_PKT_SIZE1);
 				
 				
 				//原版数据
@@ -744,5 +761,19 @@ void pantilt_resolving_entry(void* parameter)
     }
     
     // never be here.
+}
+
+void ask_resolving_entry(void* parameter)
+{
+	while(RT_TRUE)
+	{
+		rt_uint8_t *pbuf = RT_NULL;
+		
+		pbuf = rt_mp_alloc(mempool, RT_WAITING_FOREVER);
+		rt_memcpy(pbuf, ptz_askctrlpkt, PTZ_ASK_PKT_SIZE);
+		rt_mb_send(mailbox, (rt_ubase_t)pbuf);
+		
+		rt_thread_mdelay(500);
+	}
 }
 

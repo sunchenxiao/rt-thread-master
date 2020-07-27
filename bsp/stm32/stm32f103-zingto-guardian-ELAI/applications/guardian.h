@@ -67,6 +67,11 @@ void pantilt_resolving_entry(void* parameter);
 #define PANTILT_ACTION_IRCOLOR          (0x05)
 #define PANTILT_ACTION_IRZOOM           (0x06)
 #define PANTILT_ACTION_CALIBRATE        (0x07)
+#define PANTILT_ACTION_ASK     			    (0x08)
+
+#define PANTILT_MODE_HEADDOWN      	    (0x02)
+#define PANTILT_MODE_HEADLOCK      	    (0x03)
+#define PANTILT_MODE_HEADFREE      	    (0x04)
 
 /* track kernel function thread */
 void track_resolving_entry(void* parameter);
@@ -75,6 +80,12 @@ void track_resolving_entry(void* parameter);
 #define TRACK_ACTION_PREPARE            (0x01)
 #define TRACK_ACTION_TRACE_START        (0x03)
 #define TRACK_ACTION_TRACE_STOP         (0x04)
+#define TRACK_ACTION_RECORD_ON          (0x05)
+#define TRACK_ACTION_RECORD_OFF         (0x06)
+#define TRACK_ACTION_SNAP               (0x07)
+#define TRACK_ACTION_TRACE_AICAR        (0x08)
+#define TRACK_ACTION_TRACE_AIPER        (0x09)
+#define TRACK_ACTION_TRACE_COMMON       (0x0A)
 
 /* zingto kernel function thread */
 void zingto_resolving_entry(void* parameter);
@@ -101,6 +112,7 @@ struct guardian_environment
     rt_uint8_t      ptz_action;
     rt_uint8_t      irs_color;
     rt_uint8_t      irs_zoom;
+		rt_uint8_t      ptz_mode;
     rt_sem_t        sh_ptz;
     
     // User
@@ -108,8 +120,8 @@ struct guardian_environment
     
     // Track
     rt_bool_t       trck_incharge;
-    rt_bool_t       trck_prepare;
     rt_bool_t       trck_lost;
+    rt_bool_t       trck_prepare;
     rt_int16_t      trck_err_x;
     rt_int16_t      trck_err_y;
     rt_uint8_t      trck_action;

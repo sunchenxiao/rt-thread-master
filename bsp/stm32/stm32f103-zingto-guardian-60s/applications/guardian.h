@@ -57,6 +57,8 @@ void camera_resolving_entry(void* parameter);
 /* pantilt kernel function thread */
 void pantilt_resolving_entry(void* parameter);
 
+void ask_resolving_entry(void* parameter);
+
 #define PANTILT_VALUE_IGNORE            (20)
 
 #define PANTILT_ACTION_NULL             (0x00)

@@ -19,7 +19,7 @@
 
 #define MODE_PIN   GET_PIN(B, 7)
 
-#define APP_VERSION "1.0.korea"
+#define APP_VERSION "1.0.Shangbo"
 #define RT_APP_PART_ADDR    0x08020000
 
 static struct guardian_environment env;
@@ -58,17 +58,17 @@ int main(void)
     
     rt_pin_mode(MODE_PIN, PIN_MODE_INPUT);
 
-    pthread = rt_thread_create("tCamera", camera_resolving_entry, &env, 2048, 9, 40);
+    pthread = rt_thread_create("tCamera", camera_resolving_entry, &env, 2048, 10, 20);
     RT_ASSERT(pthread != RT_NULL);
     result = rt_thread_startup(pthread);
     RT_ASSERT(result == RT_EOK);
     
-    pthread = rt_thread_create("tPTZ", pantilt_resolving_entry, &env, 2048, 9, 20);
+    pthread = rt_thread_create("tPTZ", pantilt_resolving_entry, &env, 2048, 10, 20);
     RT_ASSERT(pthread != RT_NULL);
     result = rt_thread_startup(pthread);
     RT_ASSERT(result == RT_EOK);
     
-    pthread = rt_thread_create("tTracker", track_resolving_entry, &env, 2048, 10, 20);
+    pthread = rt_thread_create("tTrack", track_resolving_entry, &env, 2048, 10, 20);
     RT_ASSERT(pthread != RT_NULL);
     result = rt_thread_startup(pthread);
     RT_ASSERT(result == RT_EOK);
@@ -82,15 +82,15 @@ int main(void)
     }
     else
     {
-//        pthread = rt_thread_create("tZINGTO", zingto_resolving_entry, &env, 2048, 10, 20);
-//        RT_ASSERT(pthread != RT_NULL);
-//        result = rt_thread_startup(pthread);
-//        RT_ASSERT(result == RT_EOK);
+        pthread = rt_thread_create("tZINGTO", zingto_resolving_entry, &env, 2048, 10, 20);
+        RT_ASSERT(pthread != RT_NULL);
+        result = rt_thread_startup(pthread);
+        RT_ASSERT(result == RT_EOK);
     }
     
     while(RT_TRUE)
     {
-        rt_thread_delay(RT_TICK_PER_SECOND / 2);
+        rt_thread_delay(RT_TICK_PER_SECOND / 10);
         
 //        rt_kprintf("%4d %4d %4d %4d %4d %4d %4d %4d %4d\r", \
 //                    env.ch_value[0], env.ch_value[1], env.ch_value[2], env.ch_value[3], env.ch_value[4], \

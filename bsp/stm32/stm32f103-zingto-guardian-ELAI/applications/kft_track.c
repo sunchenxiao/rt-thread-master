@@ -16,17 +16,19 @@
 #include "general_pid.h"
 
 #define DBG_ENABLE
-#define DBG_SECTION_NAME "ELAI"
+#define DBG_SECTION_NAME "Track"
 #define DBG_LEVEL DBG_LOG
 #define DBG_COLOR
 #include <rtdbg.h>
 
-#define TRACK_UARTPORT_NAME             "uart1"
-
-#define TRACK_SEMAPHORE_NAME            "shELAI"
-#define TRACK_SEMAPHORE_RX_NAME         "shELAIrx"
+#define TRACK_UARTPORT_NAME "uart3"
+#define TRACK_SEMAPHORE_NAME "shTRCK"
+#define TRACK_SEMAPHORE_RX_NAME "shTRCKrx"
 
 #define TRACK_EVENT_NAME                "evELAI"
+
+#define TRACK_SEND_MP_NAME "mpPTZtx"
+#define TRACK_SEND_MB_NAME "mbPTZtx"
 
 /* defined the LED pin: PA0 */
 #define LED_PIN    GET_PIN(A, 0)
@@ -45,6 +47,12 @@
 #define ELAI_CONTROL_TRACE_RESET        (0x04)
 #define ELAI_CONTROL_TRIGGER            (0x02)
 #define ELAI_CONTROL_POWER_OFF          (0x01)
+
+#define ELAI_CONFIG_AICAR_T             (0x0C)
+#define ELAI_CONFIG_AIPER_T             (0x2C)
+#define ELAI_CONFIG_COMMON_T            (0xAC)
+#define ELAI_CONFIG_TRACK               (0xBA)
+#define ELAI_CONFIG_LOITER              (0xFF)
 
 #define ELAI_EVENT_MASK                 (0x00000003)
 #define ELAI_EVENT_START                (0x00000001)
@@ -141,6 +149,12 @@ static rt_err_t uart_recv_with_timeout(rt_device_t dev, void * buffer, const rt_
 
 static void trace_control_entry(void* parameter)
 {
+	
+	
+		rt_uint8_t test[4]={0xEE,0xEE,0xEE,0x00};
+		rt_device_t dev1 = rt_device_find("uart1");
+		
+	
     struct guardian_environment *env = RT_NULL;
     ELAI_ControlPacket  control;
     ELAI_ResponsePacket response;
@@ -167,8 +181,8 @@ static void trace_control_entry(void* parameter)
     pid_init(&pid_x, 1.4f, 0.02f, 0.5f);
     pid_init(&pid_y, 1.4f, 0.02f, 0.5f);
     
-    pid_setThreshold(&pid_x, 500.0f, 100.0f, 0.02f);
-    pid_setThreshold(&pid_y, 500.0f, 100.0f, 0.02f);
+    pid_setThreshold(&pid_x, 500.0f, 150.0f, 0.02f);
+    pid_setThreshold(&pid_y, 500.0f, 150.0f, 0.02f);
     
     pid_setSetpoint(&pid_x, 0.0f);
     pid_setSetpoint(&pid_y, 0.0f);
@@ -237,9 +251,15 @@ static void trace_control_entry(void* parameter)
         
         if (response.TAIL != ELAI_PACKET_TAIL) {
             LOG_W("invaild response in wrong format");
-            ulog_hexdump("ELAI", 16, pbuf, sizeof(ELAI_ResponsePacket));
+            //ulog_hexdump("ELAI", 16, pbuf, sizeof(ELAI_ResponsePacket));
         }
         else {
+					
+					
+					test[3]=response.status;
+					rt_device_write(dev1, 0, test, 4);
+					
+					
             if (response.status == 0x01) {
                 env->trck_lost = RT_FALSE;
                 env->trck_incharge = RT_FALSE;
@@ -370,30 +390,48 @@ void track_resolving_entry(void* parameter)
         control.HEADER = ELAI_PACKET_HEADER;
         control.TAIL = ELAI_PACKET_TAIL;
         
-        if (env->trck_action == TRACK_ACTION_PREPARE)
+        if (env->trck_action == TRACK_ACTION_TRACE_COMMON)
         {
-            control.config = ELAI_CONTROL_TRACE_RESET | \
-                             ELAI_CONTROL_CENTER_SELECT | \
-                             ELAI_CONTROL_NAIVE_MODE;
+            control.config = ELAI_CONFIG_COMMON_T;
             
             control.roi_height = 0;
             control.roi_width = 0;
             control.roi_x = 0;
             control.roi_y = 0;
             
-            LOG_D("TRACK_ACTION_TRACE_PREPARE");
-            //ulog_hexdump("PREPARE", 16, (rt_uint8_t *)&control, sizeof(ELAI_ControlPacket));
-            
             e = 0;
             
             env->trck_prepare = RT_TRUE;            
-        }        
+        }
+				else if(env->trck_action == TRACK_ACTION_TRACE_AICAR)		
+				{
+						control.config = ELAI_CONFIG_AICAR_T;
+            
+            control.roi_height = 0;
+            control.roi_width = 0;
+            control.roi_x = 0;
+            control.roi_y = 0;
+            
+            e = 0;
+            
+            env->trck_prepare = RT_TRUE;  
+				}
+				else if(env->trck_action == TRACK_ACTION_TRACE_AIPER)		
+				{
+						control.config = ELAI_CONFIG_AIPER_T;
+            
+            control.roi_height = 0;
+            control.roi_width = 0;
+            control.roi_x = 0;
+            control.roi_y = 0;
+            
+            e = 0;
+            
+            env->trck_prepare = RT_TRUE;  
+				}
         else if (env->trck_action == TRACK_ACTION_TRACE_START)
         {
-            control.config = ELAI_CONTROL_CENTER_SELECT | \
-                             ELAI_CONTROL_MANUAL_RECOVER | \
-                             ELAI_CONTROL_TRIGGER | \
-                             ELAI_CONTROL_NAIVE_MODE;
+            control.config = ELAI_CONFIG_TRACK;
             
             control.roi_height = 0;
             control.roi_width = 0;
@@ -402,23 +440,17 @@ void track_resolving_entry(void* parameter)
             
             e = ELAI_EVENT_START;
             
-            LOG_D("TRACK_ACTION_TRACE_START");
-            //ulog_hexdump("START", 16, (rt_uint8_t *)&control, sizeof(ELAI_ControlPacket));
-            
-            env->trck_incharge = RT_FALSE;
+            env->trck_incharge = RT_TRUE;
             env->trck_prepare = RT_FALSE;
         }
         else if (env->trck_action == TRACK_ACTION_TRACE_STOP)
         {
-            control.config = 0xFF;          // Loiter Mode
+            control.config = ELAI_CONFIG_LOITER;          // Loiter Mode
             
             control.roi_height = 0;
             control.roi_width = 0;
             control.roi_x = 0;
             control.roi_y = 0;
-            
-            LOG_D("TRACK_ACTION_TRACE_STOP");
-            //ulog_hexdump("START", 16, (rt_uint8_t *)&control, sizeof(ELAI_ControlPacket));
             
             e = ELAI_EVENT_STOP;
             

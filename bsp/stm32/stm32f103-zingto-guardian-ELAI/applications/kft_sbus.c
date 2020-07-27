@@ -21,8 +21,8 @@
 #define DBG_COLOR
 #include <rtdbg.h>
 
-#define SBUS_UARTPORT_NAME      "uart4"
-#define SBUS_SEMAPHORE_NAME     "shSBus"
+#define SBUS_UARTPORT_NAME "uart4"
+#define SBUS_SEMAPHORE_NAME "shSBus"
 
 /* defined the LED pin: PA0 */
 #define LED_PIN    GET_PIN(A, 0)
@@ -157,6 +157,39 @@ void sbus_resolving_entry(void* parameter)
             switch(i) {
 
             case 0: // roll
+                if (pval[i] < SBUS_THRESHOLD_INVAILED)
+                    tmp_status = SBUS_INVAILD;
+                else if (pval[i] < SBUS_THRESHOLD_LOW)
+                    tmp_status = SBUS_LOW;
+                else if (pval[i] < SBUS_THRESHOLD_HIGH)
+                    tmp_status = SBUS_IDLE;
+                else if (pval[i] < SBUS_THRESHOLD_EXHIGH)
+                    tmp_status = SBUS_HIGH;
+                else
+                    tmp_status = SBUS_EXHIGH;
+                
+                if (env->ch_status[i] != tmp_status)
+                {
+                    env->ch_status[i] = tmp_status;
+                    
+                    if (env->ch_status[i] == SBUS_EXHIGH)
+                        env->sbus_cali_tick = rt_tick_get();
+                }
+                else
+                {
+                    if (env->ch_status[i] == SBUS_EXHIGH)
+                    {
+                        if (rt_tick_get() - env->sbus_cali_tick > RT_TICK_PER_SECOND * 5)
+                        {
+                            env->sbus_cali_tick = rt_tick_get();
+                            
+                            env->ptz_action = PANTILT_ACTION_CALIBRATE;
+                            ptz_request = RT_TRUE;
+                            i = SBUS_CHANNEL_NUMBER;
+                        }
+                    }
+                }
+                break;                
             case 1: // pitch
             case 3: // yaw
                 if (pval[i] != env->ch_value[i])
@@ -260,22 +293,22 @@ void sbus_resolving_entry(void* parameter)
                     
                     if (env->ch_status[i] == SBUS_HIGH)
                     {
-                        cam_eval = CAMERA_CMD_CAPTURE;
-                        cam_request = RT_TRUE;
+                        env->trck_action = TRACK_ACTION_SNAP;       // Use SHGBO Tracker to store video and picture.
+                        trck_request = RT_TRUE;
                     }
                     else if (env->ch_status[i] == SBUS_LOW)
                     {
                         if (env->cam_recording)
                         {
-                            cam_eval = CAMERA_CMD_RECORD_OFF;
+                            env->trck_action = TRACK_ACTION_RECORD_OFF;
                             env->cam_recording = RT_FALSE;
                         }
                         else
                         {
-                            cam_eval = CAMERA_CMD_RECORD_ON;
+                            env->trck_action = TRACK_ACTION_RECORD_ON;
                             env->cam_recording = RT_TRUE;
                         }
-                        cam_request = RT_TRUE;
+                        trck_request = RT_TRUE;
                     }
                 }
                 break;
@@ -307,7 +340,7 @@ void sbus_resolving_entry(void* parameter)
                     }
                     else if (env->ch_status[i] == SBUS_LOW)
                     {
-                        if (RT_TRUE) //(env->trck_incharge == RT_TRUE) || (env->trck_prepare == RT_TRUE)
+                        if ((env->trck_incharge == RT_TRUE) || (env->trck_prepare == RT_TRUE))
                         {
                             env->trck_action = TRACK_ACTION_TRACE_STOP;
                             trck_request = RT_TRUE;

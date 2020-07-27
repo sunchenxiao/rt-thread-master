@@ -19,7 +19,7 @@
 #define RXBUFF_SIZE 						(1024)
 #define PLANE_R_DATA_SIZE				(20)
 #define PLANE_R_DATA_HEADER			(0xEE)
-#define PTZ_R_DATA_SIZE					(6)
+#define PTZ_R_DATA_SIZE					(8)
 #define PTZ_R_DATA_HEADER				(0xEE)
 #define GCS_R_DATA_SIZE					(5)
 #define GCS_R_DATA_HEADER				(0xE1)
@@ -40,11 +40,12 @@ static struct rt_thread uart6_rx_thread;
 
 rt_uint8_t data_send_plane[20]={0xEE,0x90,0x51,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
 rt_uint8_t data_send_gcs[10]={0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
+rt_uint8_t data_effective=0x00;
 
 double PI=3.141592654;
 double factor_lng=1.0;
-float dronelat=38.0f;
-float dronelng=114.0f;
+float dronelat=20.0f;
+float dronelng=100.0f;
 float dronealt=200.0f;
 float droneyaw=0.0f;
 float ptzpitch=0.0f;
@@ -109,7 +110,10 @@ static void uart2_send_entry(void* parameter)
 		rt_memcpy(&data_send_gcs[0],&locationalt_uint16,sizeof(rt_uint16_t));
 		rt_memcpy(&data_send_gcs[2],&locationlng_uint32,sizeof(rt_uint32_t));
 		rt_memcpy(&data_send_gcs[6],&locationlat_uint32,sizeof(rt_uint32_t));
-		rt_device_write(pUart2, 0, data_send_gcs, 10);
+		if(locationlat>0.0f&&locationlat<180.0f&&locationlng>0.0f&&locationlng<180.0f)
+		{
+			rt_device_write(pUart2, 0, data_send_gcs, 10);
+		}
 		rt_thread_mdelay(300);
 	}
 }
@@ -163,18 +167,47 @@ static void uart3_send_entry(void* parameter)
 {
 	while(RT_TRUE)
 	{
+		rt_int32_t locationlng_int32=(rt_int32_t)(locationlng*10000000.0f);
+		rt_int32_t locationlat_int32=(rt_int32_t)(locationlat*10000000.0f);
+		rt_uint8_t data1=0x00;
+		rt_uint8_t data2=0x00;
+		
 		rt_memset(&data_send_plane, 0x00, 20);
 		data_send_plane[0]=0xEE;
 		data_send_plane[1]=0x90;
 		data_send_plane[2]=0x51;
-		rt_memcpy(&data_send_plane[3],&locationlng,sizeof(float));
-		rt_memcpy(&data_send_plane[7],&locationlat,sizeof(float));
+		
+		rt_memcpy(&data_send_plane[3],&locationlng_int32,sizeof(rt_int32_t));
+		rt_memcpy(&data_send_plane[7],&locationlat_int32,sizeof(rt_int32_t));
+		data1=data_send_plane[3];
+		data2=data_send_plane[4];
+		data_send_plane[3]=data_send_plane[6];
+		data_send_plane[4]=data_send_plane[5];
+		data_send_plane[5]=data2;
+		data_send_plane[6]=data1;
+		data1=data_send_plane[7];
+		data2=data_send_plane[8];
+		data_send_plane[7]=data_send_plane[10];
+		data_send_plane[8]=data_send_plane[9];
+		data_send_plane[9]=data2;
+		data_send_plane[10]=data1;
+		
 		rt_int16_t dronealt_int=(rt_int16_t)((locationalt-2000.0f)*10.0f);
 		rt_memcpy(&data_send_plane[11],&dronealt_int,2);
+		data1=data_send_plane[11];
+		data_send_plane[11]=data_send_plane[12];
+		data_send_plane[12]=data1;
 		rt_int16_t ptzdistance_int=(rt_int16_t)(ptzdistance*10.0f);
+		data_send_plane[13]=data_effective;
 		rt_memcpy(&data_send_plane[14],&ptzdistance_int,2);
+		data1=data_send_plane[14];
+		data_send_plane[14]=data_send_plane[15];
+		data_send_plane[15]=data1;
 		rt_int16_t ptzyaw_int=(rt_int16_t)(ptzyaw*100.0f);
 		rt_memcpy(&data_send_plane[16],&ptzyaw_int,2);
+		data1=data_send_plane[16];
+		data_send_plane[16]=data_send_plane[17];
+		data_send_plane[17]=data1;
 		for(int i = 0; i < 18; i++)
 		{
 		 data_send_plane[18]+=data_send_plane[i];
@@ -184,8 +217,11 @@ static void uart3_send_entry(void* parameter)
 		{
 		 data_send_plane[19]^=data_send_plane[i];
 		}
-		rt_device_write(pUart3, 0, data_send_plane, 20);
-		rt_thread_mdelay(100);
+		if(locationlat>0.0f&&locationlat<180.0f&&locationlng>0.0f&&locationlng<180.0f)
+		{
+			rt_device_write(pUart3, 0, data_send_plane, 20);
+		}
+		rt_thread_mdelay(40);
 	}
 }
 //接收飞控指令，给dronelat/dronelng/dronealt/droneyaw赋值
@@ -232,13 +268,39 @@ static void uart3_rx_entry(void* parameter)
 			continue; 
 		szbuf = 0;
 		rt_kprintf("get uart3 data! \n");
-		rt_memcpy(&dronelng,&pbuf[3],sizeof(float));
-		rt_memcpy(&dronelat,&pbuf[7],sizeof(float));
+		rt_int32_t dronelng_int32=0x00;
+		rt_int32_t dronelat_int32=0x00;
+		rt_uint8_t data1=0x00;
+		rt_uint8_t data2=0x00;
+		
+		data1=pbuf[3];
+		data2=pbuf[4];
+		pbuf[3]=pbuf[6];
+		pbuf[4]=pbuf[5];
+		pbuf[5]=data2;
+		pbuf[6]=data1;
+		data1=pbuf[7];
+		data2=pbuf[8];
+		pbuf[7]=pbuf[10];
+		pbuf[8]=pbuf[9];
+		pbuf[9]=data2;
+		pbuf[10]=data1;
+		rt_memcpy(&dronelng_int32,&pbuf[3],sizeof(float));
+		rt_memcpy(&dronelat_int32,&pbuf[7],sizeof(float));
+		dronelng=(float)dronelng_int32*0.0000001f;
+		dronelat=(float)dronelat_int32*0.0000001f;
+		
 		rt_int16_t dronealt_int=0;
+		data1=pbuf[11];
+		pbuf[11]=pbuf[12];
+		pbuf[12]=data1;
 		rt_memcpy(&dronealt_int,&pbuf[11],2);
 		dronealt=(float)dronealt_int*0.1f+2000.0f;
-		rt_kprintf("lat:%d  lng:%d  alt%d \n",(rt_uint32_t)(dronelat*1000000),(rt_uint32_t)(dronelng*1000000),(rt_int16_t)dronealt);
+		//rt_kprintf("lat:%d  lng:%d  alt%d \n",(rt_uint32_t)(dronelat*1000000),(rt_uint32_t)(dronelng*1000000),(rt_int16_t)dronealt);
 		rt_int16_t droneyaw_int=0;
+		data1=pbuf[14];
+		pbuf[14]=pbuf[15];
+		pbuf[15]=data1;
 		rt_memcpy(&droneyaw_int,&pbuf[14],2);
 		droneyaw=(float)droneyaw_int*0.01f;
 	}
@@ -269,36 +331,30 @@ static void uart6_rx_entry(void* parameter)
 		case 0:
 		case 1:
 			szbuf += rt_device_read(pUart6, 0, pbuf + szbuf, 1);
-//            if (pbuf[0] != PTZ_R_DATA_HEADER)
-//                szbuf = 0;
+			if (pbuf[0] != PTZ_R_DATA_HEADER)
+					szbuf = 0;
 			break;
 		default:
 			szbuf += rt_device_read(pUart6, 0, pbuf + szbuf, PTZ_R_DATA_SIZE - szbuf);
 			break;
 		}
 		if (szbuf != PTZ_R_DATA_SIZE)
-			continue; 
+			continue;
 		szbuf = 0;
-		rt_kprintf("get uart6 data! \n");
-		ptzdistance=(float)(pbuf[0]+pbuf[1]*256);
-		ptzpitch=(float)(pbuf[2]+pbuf[3]*256);
-		ptzyaw=(float)(pbuf[4]+pbuf[5]*256);
+		ptzdistance=(float)(pbuf[1]+pbuf[2]*256);
+		ptzdistance=ptzdistance*0.1f;
+		ptzpitch=(float)(pbuf[3]+pbuf[4]*256);
+		ptzyaw=(float)(pbuf[5]+pbuf[6]*256);
+		ptzpitch = ptzpitch * 0.02197265625;
+		ptzyaw = ptzyaw * 0.02197265625;
+		
+		data_effective=pbuf[7];
 
 		//计算当前经度向东走0.01度为多少距离，单位为厘米
 		factor_lng = calculateLineDistance(dronelat,dronelng,dronelat,(dronelng + 0.01f)) * 100.0f;
 		float allyaw=droneyaw+ptzyaw;
-		if (allyaw >= 360)
-		{
-			allyaw = allyaw - 360;
-		}
-		if (allyaw < 0)
-		{
-			allyaw = allyaw + 360;
-		}
-		if(ptzpitch<0)
-		{
-			ptzpitch=-ptzpitch;
-		}
+		
+		rt_kprintf("ptzyaw:%d  ptzpitch:%d  ptzdistance:%d \n",(rt_uint16_t)ptzyaw,(rt_uint16_t)ptzpitch,(rt_uint8_t)ptzdistance);
 		float x = ptzdistance*sin(PI / 180.0f * (90-ptzpitch)) * sin(PI / 180.0f * allyaw);
 		float y = ptzdistance*sin(PI / 180.0f * (90-ptzpitch)) * cos(PI / 180.0f * allyaw);
 		locationlat = dronelat + y * 180.0f / (6371000.0f * PI);
