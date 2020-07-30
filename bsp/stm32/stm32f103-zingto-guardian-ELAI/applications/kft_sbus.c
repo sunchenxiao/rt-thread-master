@@ -293,22 +293,13 @@ void sbus_resolving_entry(void* parameter)
                     
                     if (env->ch_status[i] == SBUS_HIGH)
                     {
-                        env->trck_action = TRACK_ACTION_SNAP;       // Use SHGBO Tracker to store video and picture.
-                        trck_request = RT_TRUE;
+                        env->trck_action = TRACK_ACTION_TRACE_START;
+												trck_request = RT_TRUE;
                     }
                     else if (env->ch_status[i] == SBUS_LOW)
                     {
-                        if (env->cam_recording)
-                        {
-                            env->trck_action = TRACK_ACTION_RECORD_OFF;
-                            env->cam_recording = RT_FALSE;
-                        }
-                        else
-                        {
-                            env->trck_action = TRACK_ACTION_RECORD_ON;
-                            env->cam_recording = RT_TRUE;
-                        }
-                        trck_request = RT_TRUE;
+                        env->trck_action = TRACK_ACTION_TRACE_STOP;
+												trck_request = RT_TRUE;
                     }
                 }
                 break;
@@ -328,24 +319,17 @@ void sbus_resolving_entry(void* parameter)
                     
                     if (env->ch_status[i] == SBUS_HIGH)
                     {
-                        if (env->trck_incharge == RT_FALSE)
-                        {
-                            if (env->trck_prepare == RT_FALSE)
-                                env->trck_action = TRACK_ACTION_PREPARE;
-                            else
-                                env->trck_action = TRACK_ACTION_TRACE_START;
-                            
-                            trck_request = RT_TRUE;
-                        }
+                        env->trck_action = TRACK_ACTION_TRACE_AICAR;	
+                    }
+										else if (env->ch_status[i] == SBUS_IDLE)
+                    {
+                        env->trck_action = TRACK_ACTION_TRACE_AIPER;
                     }
                     else if (env->ch_status[i] == SBUS_LOW)
                     {
-                        if ((env->trck_incharge == RT_TRUE) || (env->trck_prepare == RT_TRUE))
-                        {
-                            env->trck_action = TRACK_ACTION_TRACE_STOP;
-                            trck_request = RT_TRUE;
-                        }
+                        env->trck_action = TRACK_ACTION_TRACE_COMMON;
                     }
+										trck_request = RT_TRUE;
                 }
                 break;
             case 7: // done
