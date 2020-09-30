@@ -110,8 +110,9 @@ rt_uint8_t calib_protcol[4][PANTILT_CALIB_PKT_SIZE] = {
 #define PANTILT_VALUE_RATIO     (0.7142857f)
 
 #define ANSWER_PKT_HEADER0		(0x3E)
-#define ANSWER_PKT_SIZE				(129)
-#define ANSWER_PKT_SIZE1			(6)
+#define ANSWER_PKT_SIZE			(129)
+#define ANSWER_PKT_HEADER1		(0xEF)
+#define ANSWER_PKT_SIZE1		(6)
 
 /* defined the LED pin: PA0 */
 #define LED_PIN    GET_PIN(A, 0)
@@ -154,7 +155,7 @@ static void pantilt_data_send_entry(void* parameter)
     dev = rt_device_find(PANTILT_UARTPORT_NAME);
     RT_ASSERT(dev != RT_NULL);
 	
-		dev5 = rt_device_find("uart5");
+	dev5 = rt_device_find("uart1");
     RT_ASSERT(dev5 != RT_NULL);
     
     LOG_I("send sub-thread, start!");
@@ -178,19 +179,19 @@ static void pantilt_data_send_entry(void* parameter)
         else if(ubase16 == IRSENSOR_COLOR_PKT_HEADER)
         {
             LOG_D("send to irsensor color");
-            rt_device_write(dev5, 0, pbuf, IRSENSOR_COLOR_PKT_SIZE);
+            rt_device_write(dev, 0, pbuf, IRSENSOR_COLOR_PKT_SIZE);
         }
         else if(ubase16 == IRSENSOR_ZOOM_PKT_HEADER)
         {
             LOG_D("send to irsensor zoom");
-            rt_device_write(dev5, 0, pbuf, IRSENSOR_ZOOM_PKT_SIZE);
+            rt_device_write(dev, 0, pbuf, IRSENSOR_ZOOM_PKT_SIZE);
         }
         else if(ubase16 == PANTILT_CALIB_PKT_HEADER)
         {
             LOG_D("send to pantilt calib gyro");
             rt_device_write(dev, 0, pbuf, PANTILT_CALIB_PKT_SIZE);            
         }
-				else if(ubase16 == PTZ_ASK_PKT_HEADER)
+		else if(ubase16 == PTZ_ASK_PKT_HEADER)
         { 
             rt_device_write(dev, 0, pbuf, PTZ_ASK_PKT_SIZE);            
         }
@@ -206,9 +207,9 @@ static void pantilt_data_recv_entry(void* parameter)
     struct guardian_environment *env = RT_NULL;
     rt_uint8_t* pbuf;
     rt_device_t dev = RT_NULL;
-		rt_device_t dev1 = RT_NULL;
-		rt_err_t result = RT_EOK;
-		rt_size_t szbuf = 0;
+	rt_device_t dev5 = RT_NULL;
+	rt_err_t result = RT_EOK;
+	rt_size_t szbuf = 0;
     
     env = (struct guardian_environment*)parameter;
     RT_ASSERT(env != RT_NULL);
@@ -219,9 +220,7 @@ static void pantilt_data_recv_entry(void* parameter)
     dev = rt_device_find(PANTILT_UARTPORT_NAME);
     RT_ASSERT(dev != RT_NULL);
     
-		dev1 = rt_device_find("uart1");
-	
-	
+	dev5 = rt_device_find("uart5");
     LOG_I("recv sub-thread, start!");
 	
 	
@@ -229,8 +228,8 @@ static void pantilt_data_recv_entry(void* parameter)
     
     while (1)
     {
-				//激光数据
-        result = rt_sem_take(semaph, RT_WAITING_FOREVER);
+		//激光数据
+        result = rt_sem_take(semaph, 50);
         
         if(result == -RT_ETIMEOUT)
             continue;
@@ -239,23 +238,23 @@ static void pantilt_data_recv_entry(void* parameter)
         case 0:
         case 1:
             szbuf += rt_device_read(dev, 0, pbuf + szbuf, 1);
-//            if (pbuf[0] != ANSWER_PKT_HEADER0)
-//                szbuf = 0;
+            //if (pbuf[0] != ANSWER_PKT_HEADER1)
+                //szbuf = 0;
             break;
         default:
             szbuf += rt_device_read(dev, 0, pbuf + szbuf, ANSWER_PKT_SIZE1 - szbuf);
             break;
         }
-				if (szbuf != ANSWER_PKT_SIZE1)
+		if (szbuf != ANSWER_PKT_SIZE1)
             continue;
         
         szbuf = 0;
         
-				rt_device_write(dev1, 0, pbuf, ANSWER_PKT_SIZE1);
+		rt_device_write(dev5, 0, pbuf, ANSWER_PKT_SIZE1-1);
 				
 				
-				//原版数据
-				/*result = rt_sem_take(semaph, RT_WAITING_FOREVER);
+		//原版数据
+		/*result = rt_sem_take(semaph, RT_WAITING_FOREVER);
         
         if(result == -RT_ETIMEOUT)
             continue;

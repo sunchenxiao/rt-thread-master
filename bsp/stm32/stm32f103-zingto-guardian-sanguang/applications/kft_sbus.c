@@ -266,17 +266,18 @@ void sbus_resolving_entry(void* parameter)
                     env->ch_status[i] = tmp_status;
                     
                     ptz_request = RT_TRUE;
+                    env->ptz_action = PANTILT_ACTION_NULL;
                     
                     if (env->ch_status[i] == SBUS_HIGH)
-                        env->ptz_action = PANTILT_ACTION_HEADDOWN;
+                        env->ptz_mode = PANTILT_MODE_HEADDOWN;
                     else if (env->ch_status[i] == SBUS_IDLE)
-                        env->ptz_action = PANTILT_ACTION_HEADFREE;
+                        env->ptz_mode = PANTILT_MODE_HEADFREE;
                     else if (env->ch_status[i] == SBUS_LOW)
-                        env->ptz_action = PANTILT_ACTION_HEADLOCK;
+                        env->ptz_mode = PANTILT_MODE_HEADLOCK;
                     else
                         ptz_request = RT_FALSE;
                 }
-                break;          
+                break;        
             case 5: // done
                 if (pval[i] < SBUS_THRESHOLD_INVAILED)
                     tmp_status = SBUS_INVAILD;
@@ -294,10 +295,10 @@ void sbus_resolving_entry(void* parameter)
                     if (env->ch_status[i] == SBUS_HIGH)
                     {
                         cam_eval = CAMERA_CMD_CAPTURE;
-                        //env->trck_action = TRACK_ACTION_CAPTURE;
+                        env->trck_action = TRACK_ACTION_CAPTURE;
                         
                         cam_request = RT_TRUE;
-                        //trck_request = RT_TRUE;
+                        trck_request = RT_TRUE;
                     }
                     else if (env->ch_status[i] == SBUS_LOW)
                     {
@@ -305,18 +306,17 @@ void sbus_resolving_entry(void* parameter)
                         {
                             cam_eval = CAMERA_CMD_RECORD_OFF;
                             env->cam_recording = RT_FALSE;
-                            //env->trck_action = TRACK_ACTION_RECORD_OFF;
+                            env->trck_action = TRACK_ACTION_RECORD_OFF;
                         }
                         else
                         {
                             cam_eval = CAMERA_CMD_RECORD_ON;
                             env->cam_recording = RT_TRUE;
-                            //env->trck_action = TRACK_ACTION_RECORD_ON;
-                            
+                            env->trck_action = TRACK_ACTION_RECORD_ON;  
                         }
                         
                         cam_request = RT_TRUE;
-                        //trck_request = RT_TRUE;
+                        trck_request = RT_TRUE;
                     }
                     
                 }

@@ -20,7 +20,7 @@
 #define DBG_COLOR
 #include <rtdbg.h>
 
-#define ZINGTO_UARTPORT_NAME "uart1"
+#define ZINGTO_UARTPORT_NAME "uart5"
 #define ZINGTO_SEMAPHORE_NAME "shZINGTO"
 
 
@@ -223,16 +223,22 @@ void zingto_resolving_entry(void* parameter)
             env->cam_zoom_speed = 0;
             cam_eval = CAMERA_CMD_RECORD_ON;
             cam_request = RT_TRUE;
+			env->trck_action = TRACK_ACTION_RECORD_ON;
+            trck_request = RT_TRUE;
             break;
         case 0x0D:  // record off
             env->cam_zoom_speed = 0;
             cam_eval = CAMERA_CMD_RECORD_OFF;
             cam_request = RT_TRUE;
+			env->trck_action = TRACK_ACTION_RECORD_OFF;
+            trck_request = RT_TRUE;
             break;
         case 0x0E:  // capture
             env->cam_zoom_speed = 0;
             cam_eval = CAMERA_CMD_CAPTURE;
             cam_request = RT_TRUE;
+			env->trck_action = TRACK_ACTION_CAPTURE;
+            trck_request = RT_TRUE;
             break;
         case 0x11:
             LOG_W("calibrate gyro temp");

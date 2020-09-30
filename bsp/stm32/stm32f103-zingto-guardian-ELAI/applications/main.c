@@ -15,9 +15,10 @@
 #include "guardian.h"
 
 /* defined the LED pin: PA0 */
-#define LED_PIN    GET_PIN(A, 0)
+#define LED_PIN    GET_PIN(B, 1)
+#define LED_SBUS_PIN   GET_PIN(B, 0)
 
-#define MODE_PIN   GET_PIN(B, 7)
+#define MODE_PIN   GET_PIN(B, 3)
 
 #define APP_VERSION "1.0.Shangbo"
 #define RT_APP_PART_ADDR    0x08020000
@@ -55,6 +56,7 @@ int main(void)
     
     /* set LED0 pin mode to output */
     rt_pin_mode(LED_PIN, PIN_MODE_OUTPUT);
+	rt_pin_mode(LED_SBUS_PIN, PIN_MODE_OUTPUT);
     
     rt_pin_mode(MODE_PIN, PIN_MODE_INPUT);
 
@@ -73,16 +75,16 @@ int main(void)
     result = rt_thread_startup(pthread);
     RT_ASSERT(result == RT_EOK);
     
-    if (rt_pin_read(MODE_PIN))
+    if (rt_pin_read(MODE_PIN)==1)
     {
-        pthread = rt_thread_create("tSBus", sbus_resolving_entry, &env, 2048, 8, 20);
+        pthread = rt_thread_create("tSBus", sbus_resolving_entry, &env, 2048, 3, 20);
         RT_ASSERT(pthread != RT_NULL);
         result = rt_thread_startup(pthread);
         RT_ASSERT(result == RT_EOK);
     }
     else
     {
-        pthread = rt_thread_create("tZINGTO", zingto_resolving_entry, &env, 2048, 10, 20);
+        pthread = rt_thread_create("tZINGTO", zingto_resolving_entry, &env, 2048, 3, 20);
         RT_ASSERT(pthread != RT_NULL);
         result = rt_thread_startup(pthread);
         RT_ASSERT(result == RT_EOK);
@@ -90,7 +92,7 @@ int main(void)
     
     while(RT_TRUE)
     {
-        rt_thread_delay(RT_TICK_PER_SECOND / 10);
+        rt_thread_delay(RT_TICK_PER_SECOND / 2);
         
 //        rt_kprintf("%4d %4d %4d %4d %4d %4d %4d %4d %4d\r", \
 //                    env.ch_value[0], env.ch_value[1], env.ch_value[2], env.ch_value[3], env.ch_value[4], \

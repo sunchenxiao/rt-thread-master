@@ -129,8 +129,8 @@ static void track_data_recv_entry(void* parameter)
     dev = rt_device_find(TRACK_UARTPORT_NAME);
     RT_ASSERT(dev != RT_NULL);
 		
-    pid_init(&pid_x, 1.4f, 0.02f, 0.5f);
-    pid_init(&pid_y, 1.4f, 0.02f, 0.5f);
+    pid_init(&pid_x, 1.1f, 0.02f, 0.7f);
+    pid_init(&pid_y, 1.1f, 0.02f, 0.7f);
     
     pid_setThreshold(&pid_x, 500.0f, 200.0f, 0.02f);
     pid_setThreshold(&pid_y, 500.0f, 200.0f, 0.02f);
@@ -348,6 +348,13 @@ void track_resolving_entry(void* parameter)
             ctrlpkt.set_mode = 0x7C;
             
             LOG_D("tracker stop recording video.");
+        }
+		else if (env->trck_action == TRACK_ACTION_CAPTURE)
+        {
+            ctrlpkt.set_mode = 0x7C;
+            ctrlpkt.set_fuction = 0x02;
+            
+            LOG_D("TRACK_ACTION_CAPTURE");
         }
         else if (env->trck_action == TRACK_ACTION_SNAP)
         {

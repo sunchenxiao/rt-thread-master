@@ -152,7 +152,7 @@ static void trace_control_entry(void* parameter)
 	
 	
 		rt_uint8_t test[4]={0xEE,0xEE,0xEE,0x00};
-		rt_device_t dev1 = rt_device_find("uart1");
+		rt_device_t dev1 = rt_device_find("uart5");
 		
 	
     struct guardian_environment *env = RT_NULL;

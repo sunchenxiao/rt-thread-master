@@ -219,7 +219,7 @@ static void pantilt_data_recv_entry(void* parameter)
     dev = rt_device_find(PANTILT_UARTPORT_NAME);
     RT_ASSERT(dev != RT_NULL);
     
-		dev1 = rt_device_find("uart1");
+		dev1 = rt_device_find("uart5");
 	
 	
     LOG_I("recv sub-thread, start!");

@@ -15,9 +15,9 @@
 #include "guardian.h"
 
 /* defined the LED pin: PA0 */
-#define LED_PIN    GET_PIN(A, 0)
+#define LED_PIN    GET_PIN(B, 1)
 
-#define MODE_PIN   GET_PIN(B, 7)
+#define MODE_PIN   GET_PIN(B, 3)
 
 #define APP_VERSION "1.0.Shangbo"
 #define RT_APP_PART_ADDR    0x08020000

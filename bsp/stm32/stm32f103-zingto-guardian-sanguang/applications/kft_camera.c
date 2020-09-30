@@ -29,7 +29,7 @@ const char XUANZHAN_LOGO_RECORD_OFF[] = "<?xml version=\"1.0\" encoding=\"GB2312
 const char XUANZHAN_LOGO_SNAP_ON[] = "<?xml version=\"1.0\" encoding=\"GB2312\" ?><icon name=\"photo_l\"  posx=\"10\" posy=\"10\" cmd=\"show\" ></icon>\r\n";
 const char XUANZHAN_LOGO_SNAP_OFF[] = "<?xml version=\"1.0\" encoding=\"GB2312\" ?><icon name=\"photo_l\"  posx=\"10\" posy=\"10\" cmd=\"hide\" ></icon>\r\n";
 
-#define CAMERA_UARTPORT_NAME "uart5"
+#define CAMERA_UARTPORT_NAME "uart1"
 #define CAMERA_SEMAPHORE_NAME "shCAM"
 #define CAMERA_EVENT_NAME "evCAM"
 

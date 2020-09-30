@@ -20,7 +20,7 @@
 #define DBG_COLOR
 #include <rtdbg.h>
 
-#define ZINGTO_UARTPORT_NAME "uart1"
+#define ZINGTO_UARTPORT_NAME "uart5"
 #define ZINGTO_SEMAPHORE_NAME "shZINGTO"
 
 
