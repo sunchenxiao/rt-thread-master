@@ -15,7 +15,7 @@
 #include "guardian.h"
 
 /* defined the LED pin: PA0 */
-#define LED_PIN    GET_PIN(A, 0)
+#define LED_PIN    GET_PIN(C, 6)
 
 #define MODE_PIN   GET_PIN(B, 7)
 
@@ -58,31 +58,31 @@ int main(void)
     
     rt_pin_mode(MODE_PIN, PIN_MODE_INPUT);
 
-    pthread = rt_thread_create("tCamera", camera_resolving_entry, &env, 2048, 10, 20);
+    pthread = rt_thread_create("tCamera", camera_resolving_entry, &env, 2048, 9, 50);
     RT_ASSERT(pthread != RT_NULL);
     result = rt_thread_startup(pthread);
     RT_ASSERT(result == RT_EOK);
     
-    pthread = rt_thread_create("tPTZ", pantilt_resolving_entry, &env, 2048, 10, 20);
+    pthread = rt_thread_create("tPTZ", pantilt_resolving_entry, &env, 2048, 6, 20);
     RT_ASSERT(pthread != RT_NULL);
     result = rt_thread_startup(pthread);
     RT_ASSERT(result == RT_EOK);
     
-    pthread = rt_thread_create("tTrack", track_resolving_entry, &env, 2048, 10, 20);
+    pthread = rt_thread_create("tTrack", track_resolving_entry, &env, 2048, 9, 20);
     RT_ASSERT(pthread != RT_NULL);
     result = rt_thread_startup(pthread);
     RT_ASSERT(result == RT_EOK);
     
     if (rt_pin_read(MODE_PIN))
     {
-        pthread = rt_thread_create("tSBus", sbus_resolving_entry, &env, 2048, 8, 20);
+        pthread = rt_thread_create("tSBus", sbus_resolving_entry, &env, 2048, 3, 20);
         RT_ASSERT(pthread != RT_NULL);
         result = rt_thread_startup(pthread);
         RT_ASSERT(result == RT_EOK);
     }
     else
     {
-        pthread = rt_thread_create("tZINGTO", zingto_resolving_entry, &env, 2048, 10, 20);
+        pthread = rt_thread_create("tZINGTO", zingto_resolving_entry, &env, 2048, 3, 20);
         RT_ASSERT(pthread != RT_NULL);
         result = rt_thread_startup(pthread);
         RT_ASSERT(result == RT_EOK);

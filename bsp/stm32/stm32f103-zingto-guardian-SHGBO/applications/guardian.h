@@ -67,7 +67,7 @@ void pantilt_resolving_entry(void* parameter);
 #define PANTILT_ACTION_IRCOLOR          (0x05)
 #define PANTILT_ACTION_IRZOOM           (0x06)
 #define PANTILT_ACTION_CALIBRATE        (0x07)
-#define PANTILT_ACTION_ASK     			    (0x08)
+#define PANTILT_ACTION_ASK     			(0x08)
 
 #define PANTILT_MODE_HEADDOWN      	    (0x02)
 #define PANTILT_MODE_HEADLOCK      	    (0x03)
@@ -82,7 +82,10 @@ void track_resolving_entry(void* parameter);
 #define TRACK_ACTION_TRACE_STOP         (0x04)
 #define TRACK_ACTION_RECORD_ON          (0x05)
 #define TRACK_ACTION_RECORD_OFF         (0x06)
-#define TRACK_ACTION_SNAP               (0x07)
+#define TRACK_ACTION_CAPTURE			(0x07)
+#define TRACK_ACTION_PIP_MODE			(0x08)
+#define TRACK_ACTION_IRCOLOR			(0x09)
+#define TRACK_ACTION_IRZOOM				(0x0A)
 
 /* zingto kernel function thread */
 void zingto_resolving_entry(void* parameter);
@@ -108,8 +111,8 @@ struct guardian_environment
     // PanTilt
     rt_uint8_t      ptz_action;
     rt_uint8_t      irs_color;
-    rt_uint8_t      irs_zoom;
-		rt_uint8_t      ptz_mode;
+    rt_int8_t       irs_zoom;
+	rt_uint8_t      ptz_mode;
     rt_sem_t        sh_ptz;
     
     // User

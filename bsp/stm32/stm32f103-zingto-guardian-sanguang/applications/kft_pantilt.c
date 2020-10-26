@@ -61,7 +61,7 @@ rt_uint8_t irs_serialctrlpkt[IRSENSOR_COLOR_PKT_SIZE] = {0xAA, 0x05, 0x01, 0x42,
 
 #define PTZ_ASK_PKT_SIZE (5)  
 
-rt_uint8_t ptz_askctrlpkt[PTZ_ASK_PKT_SIZE] = {0xE1,0x1E,0x15,0xF1,0x1F}; //询问激光数据为0x15 询问毛子原版数据为0x12
+rt_uint8_t ptz_askctrlpkt[PTZ_ASK_PKT_SIZE] = {0xE1,0x1E,0x12,0xF1,0x1F}; //询问激光数据为0x15 询问毛子原版数据为0x12
 
 #define IRSENSOR_ZOOM_PKT_SIZE  (16)
 
@@ -229,7 +229,7 @@ static void pantilt_data_recv_entry(void* parameter)
     while (1)
     {
 		//激光数据
-        result = rt_sem_take(semaph, 50);
+        /*result = rt_sem_take(semaph, 50);
         
         if(result == -RT_ETIMEOUT)
             continue;
@@ -250,11 +250,11 @@ static void pantilt_data_recv_entry(void* parameter)
         
         szbuf = 0;
         
-		rt_device_write(dev5, 0, pbuf, ANSWER_PKT_SIZE1-1);
+		rt_device_write(dev5, 0, pbuf, ANSWER_PKT_SIZE1);*/
 				
 				
 		//原版数据
-		/*result = rt_sem_take(semaph, RT_WAITING_FOREVER);
+		result = rt_sem_take(semaph, RT_WAITING_FOREVER);
         
         if(result == -RT_ETIMEOUT)
             continue;
@@ -270,18 +270,18 @@ static void pantilt_data_recv_entry(void* parameter)
             szbuf += rt_device_read(dev, 0, pbuf + szbuf, ANSWER_PKT_SIZE - szbuf);
             break;
         }
-				if (szbuf != ANSWER_PKT_SIZE)
+		if (szbuf != ANSWER_PKT_SIZE)
             continue;
         
         szbuf = 0;
 				
         //yaw 71 72     pitch 69 70
-				rt_uint8_t send_data[6]={0x00,0x00,0x00,0x00,0x00,0x00};
-				send_data[2]=pbuf[69];
-				send_data[3]=pbuf[70];
-				send_data[4]=pbuf[71];
-				send_data[5]=pbuf[72];
-				rt_device_write(dev1, 0, send_data, 6);*/
+		rt_uint8_t send_data[6]={0x00,0x00,0x00,0x00,0x00,0x00};
+		send_data[2]=pbuf[69];
+		send_data[3]=pbuf[70];
+		send_data[4]=pbuf[71];
+		send_data[5]=pbuf[72];
+		rt_device_write(dev5, 0, send_data, 6);
     }
 }
 

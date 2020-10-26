@@ -85,6 +85,7 @@ void track_resolving_entry(void* parameter);
 #define TRACK_ACTION_RECORD_OFF         (0x06)
 #define TRACK_ACTION_SNAP               (0x07)
 #define TRACK_ACTION_POINT_START        (0x08)
+#define TRACK_ACTION_CAPTURE			(0x09)
 
 /* zingto kernel function thread */
 void zingto_resolving_entry(void* parameter);

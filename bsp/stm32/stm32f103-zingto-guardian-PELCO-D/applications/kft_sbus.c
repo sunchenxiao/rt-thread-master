@@ -295,10 +295,10 @@ void sbus_resolving_entry(void* parameter)
                     if (env->ch_status[i] == SBUS_HIGH)
                     {
                         cam_eval = CAMERA_CMD_CAPTURE;
-                        //env->trck_action = TRACK_ACTION_CAPTURE;
+                        env->trck_action = TRACK_ACTION_CAPTURE;
                         
                         cam_request = RT_TRUE;
-                        //trck_request = RT_TRUE;
+                        trck_request = RT_TRUE;
                     }
                     else if (env->ch_status[i] == SBUS_LOW)
                     {
@@ -306,18 +306,18 @@ void sbus_resolving_entry(void* parameter)
                         {
                             cam_eval = CAMERA_CMD_RECORD_OFF;
                             env->cam_recording = RT_FALSE;
-                            //env->trck_action = TRACK_ACTION_RECORD_OFF;
+                            env->trck_action = TRACK_ACTION_RECORD_OFF;
                         }
                         else
                         {
                             cam_eval = CAMERA_CMD_RECORD_ON;
                             env->cam_recording = RT_TRUE;
-                            //env->trck_action = TRACK_ACTION_RECORD_ON;
+                            env->trck_action = TRACK_ACTION_RECORD_ON;
                             
                         }
                         
                         cam_request = RT_TRUE;
-                        //trck_request = RT_TRUE;
+                        trck_request = RT_TRUE;
                     }
                     
                 }

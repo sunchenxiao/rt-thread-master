@@ -460,6 +460,11 @@
           <GroupName>Applications</GroupName>
           <Files>
             <File>
+              <FileName>general_pid.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>applications\general_pid.c</FilePath>
+            </File>
+            <File>
               <FileName>kft_camera.c</FileName>
               <FileType>1</FileType>
               <FilePath>applications\kft_camera.c</FilePath>
@@ -488,11 +493,6 @@
               <FileName>main.c</FileName>
               <FileType>1</FileType>
               <FilePath>applications\main.c</FilePath>
-            </File>
-            <File>
-              <FileName>general_pid.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\applications\general_pid.c</FilePath>
             </File>
           </Files>
         </Group>

@@ -53,11 +53,12 @@ rt_uint8_t irs_serialctrlpkt[IRSENSOR_COLOR_PKT_SIZE] = {0xAA, 0x05, 0x01, 0x42,
 
 #define PTZ_SET_ANGLE_SIZE (20)                    
                              
-rt_uint8_t ptz_setangle[PTZ_SET_ANGLE_SIZE] = {0x3e,0x43,0x0f,0x52,0x02,0x02,0x05,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
+rt_uint8_t ptz_setangle[PTZ_SET_ANGLE_SIZE] = {0x3e,0x43,0x0f,0x52,0x05,0x05,0x05,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
 
 #define PTZ_ASK_PKT_SIZE (5)  
 
 rt_uint8_t ptz_askctrlpkt[PTZ_ASK_PKT_SIZE] = {0xE1,0x1E,0x12,0xF1,0x1F}; //询问激光数据为0x15 询问毛子原版数据为0x12
+rt_uint8_t ptz_askctrlpkt_jiugang[PTZ_ASK_PKT_SIZE] = {0xE1,0x1E,0x15,0xF1,0x1F};
 
 #define IRSENSOR_ZOOM_PKT_SIZE  (16)
 
@@ -90,10 +91,10 @@ rt_uint8_t POINT_RATE_X[30]={	110,70,60,50,40,35,
 								11,10,10,10,10,10,
 							};
 rt_uint8_t POINT_RATE_Y[30]={	70,40,30,23,21,19,
-								17,15,13,11,10,9,
+								17,15,13,12,11,10,
+								10,10,9,9,9,9,
 								8,8,8,8,7,7,
 								7,7,6,6,6,6,
-								6,5,5,5,5,5,
 							};
 rt_uint8_t POINT_RATE_IR_X=30;
 rt_uint8_t POINT_RATE_IR_Y=20;
@@ -240,31 +241,34 @@ static void pantilt_data_recv_entry(void* parameter)
     while (1)
     {
 		//激光数据
-        /*result = rt_sem_take(semaph, RT_WAITING_FOREVER);
+		result = rt_sem_take(semaph, 20);
         
-        if(result == -RT_ETIMEOUT)
-            continue;
-        
-        switch (szbuf){
-        case 0:
-        case 1:
+        if(result != -RT_ETIMEOUT) {
+            /* read 1 byte form uart fifo ringbuffer */
             szbuf += rt_device_read(dev, 0, pbuf + szbuf, 1);
-            if (pbuf[0] != ANSWER_PKT_HEADER1)
-                szbuf = 0;
-            break;
-        default:
-            szbuf += rt_device_read(dev, 0, pbuf + szbuf, ANSWER_PKT_SIZE1 - szbuf);
-            break;
-        }
-				if (szbuf != ANSWER_PKT_SIZE1)
             continue;
-        
-        szbuf = 0; 
-			rt_device_write(dev5, 0, pbuf+1, ANSWER_PKT_SIZE1-1);*/
+        }
+        else {
+            if (szbuf == 0)
+                continue;       // ignore idle frame.
+        }
+		if(pbuf[0] == ANSWER_PKT_HEADER0&&szbuf>72)
+		{
+			env->ptz_pitch=pbuf[69]+pbuf[70]*256;
+			env->ptz_yaw=pbuf[71]+pbuf[72]*256;
+		}else if(szbuf==6&&ask_laser_distance==1){
+			env->ptz_pitch=pbuf[2]+pbuf[3]*256;
+			env->ptz_yaw=pbuf[4]+pbuf[5]*256;
+			rt_device_write(dev5, 0, pbuf, 6);
+		}else{
+			
+		}
+		
+		szbuf = 0; 
 				
 				
 		//原版数据
-		result = rt_sem_take(semaph, RT_WAITING_FOREVER);
+		/*result = rt_sem_take(semaph, RT_WAITING_FOREVER);
         
         if(result == -RT_ETIMEOUT)
             continue;
@@ -286,7 +290,7 @@ static void pantilt_data_recv_entry(void* parameter)
 		
         //yaw 71 72     pitch 69 70
 		env->ptz_pitch=pbuf[69]+pbuf[70]*256;
-		env->ptz_yaw=pbuf[71]+pbuf[72]*256;	
+		env->ptz_yaw=pbuf[71]+pbuf[72]*256;	*/
     }
 }
 
@@ -342,10 +346,12 @@ void pantilt_resolving_entry(void* parameter)
 		//location
 		if (env->ptz_action == PANTILT_ACTION_ASK)
 		{
+			ask_laser_distance=1;
 			env->ptz_action = PANTILT_ACTION_NULL;
 			pbuf = rt_mp_alloc(mempool, RT_WAITING_FOREVER);
-			rt_memcpy(pbuf, ptz_askctrlpkt, PTZ_ASK_PKT_SIZE);
-			rt_mb_send(mailbox, (rt_ubase_t)pbuf);           
+			rt_memcpy(pbuf, ptz_askctrlpkt_jiugang, PTZ_ASK_PKT_SIZE);
+			rt_mb_send(mailbox, (rt_ubase_t)pbuf);
+			continue;
 		}
 
         if (env->trck_incharge)
@@ -688,12 +694,11 @@ void pantilt_resolving_entry(void* parameter)
 			{
 				is_pointing=1;
 				env->ptz_action = PANTILT_ACTION_NULL;
-				ptz_setangle[4]=0x02;
-				ptz_setangle[5]=0x02;
+				ptz_setangle[4]=0x05;
+				ptz_setangle[5]=0x05;
 				ptz_setangle[6]=0x05;
 				ptz_setangle[19]=0x00;
 				rt_uint16_t sum_pitch,sum_yaw;
-				rt_kprintf("env->cam_pip000 \n");
 				rt_kprintf("env->cam_pip_mode : %d \n",env->cam_pip_mode);
 				switch(env->cam_pip_mode)
                 {

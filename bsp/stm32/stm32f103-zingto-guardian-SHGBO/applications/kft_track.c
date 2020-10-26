@@ -21,7 +21,7 @@
 #define DBG_COLOR
 #include <rtdbg.h>
 
-#define TRACK_UARTPORT_NAME "uart3"
+#define TRACK_UARTPORT_NAME "uart5"
 #define TRACK_SEMAPHORE_NAME "shTRCK"
 #define TRACK_SEMAPHORE_RX_NAME "shTRCKrx"
 
@@ -32,10 +32,14 @@
 #define LED_PIN    GET_PIN(A, 0)
 
 #define TRACK_BUFFER_SIZE       (64)
+#define MIN_RX_INTERVAL    	    (10)
 
 #define TRACK_ACK_PKT_SIZE      (8)
 #define TRACK_ACK_PKT_HEADER    (0xBB)
 #define TRACK_ACK_PKT_ADDR      (0x01)
+#define ZOOM_ACK_PKT_SIZE       (7)
+#define ZOOM_ACK_PKT_HEADER     (0x90)
+#define ZOOM_ACK_PKT_ADDR       (0x50)
 
 #pragma pack(1)
 typedef struct __SHB30X_SendPacket
@@ -52,7 +56,7 @@ typedef struct __SHB30X_SendPacket
 	rt_uint8_t		__reserved3;		//b13 0x01,
 	rt_uint8_t		set_trace_mode;		//b14 0x3c,
 	rt_uint8_t		set_video_source;   //b15 0x00 - 0x03
-	rt_uint8_t		__reserved5;		//b16
+	rt_uint8_t		set_ircolor;		//b16
 	rt_uint8_t		set_zoom;			//b17
 	rt_uint8_t		__reserved6;		//b18
 	rt_uint8_t		__reserved7;		//b19
@@ -65,6 +69,51 @@ static rt_sem_t semaph = RT_NULL;
 
 static rt_mailbox_t mailbox = RT_NULL;
 static rt_mp_t mempool = RT_NULL;
+#define VISCA_SET_ZOOMPOS_CMD_SIZE      (9)
+const rt_uint8_t VISCA_ZOOM[41][VISCA_SET_ZOOMPOS_CMD_SIZE] = 
+{
+	{0x81, 0x01, 0x04, 0x47, 0x00, 0x00, 0x00, 0x00, 0xFF},	//1X
+	{0x81, 0x01, 0x04, 0x47, 0x01, 0x06, 0x0a, 0x01, 0xFF},	//2X
+	{0x81, 0x01, 0x04, 0x47, 0x02, 0x00, 0x06, 0x03, 0xFF},	//3X
+	{0x81, 0x01, 0x04, 0x47, 0x02, 0x06, 0x02, 0x08, 0xFF},	//4X
+	{0x81, 0x01, 0x04, 0x47, 0x02, 0x0a, 0x01, 0x0d, 0xFF},	//5X
+	{0x81, 0x01, 0x04, 0x47, 0x02, 0x0d, 0x01, 0x03, 0xFF},	//6X
+	{0x81, 0x01, 0x04, 0x47, 0x02, 0x0f, 0x06, 0x0d, 0xFF},	//7X
+	{0x81, 0x01, 0x04, 0x47, 0x03, 0x01, 0x06, 0x01, 0xFF},	//8X
+	{0x81, 0x01, 0x04, 0x47, 0x03, 0x03, 0x00, 0x0d, 0xFF},	//9X
+	{0x81, 0x01, 0x04, 0x47, 0x03, 0x04, 0x08, 0x06, 0xFF},	//10X
+	{0x81, 0x01, 0x04, 0x47, 0x03, 0x05, 0x0d, 0x07, 0xFF},	//11X
+	{0x81, 0x01, 0x04, 0x47, 0x03, 0x07, 0x00, 0x09, 0xFF},	//12X
+	{0x81, 0x01, 0x04, 0x47, 0x03, 0x08, 0x02, 0x00, 0xFF},	//13X
+	{0x81, 0x01, 0x04, 0x47, 0x03, 0x09, 0x02, 0x00, 0xFF},	//14X
+	{0x81, 0x01, 0x04, 0x47, 0x03, 0x0a, 0x00, 0x0a, 0xFF},	//15X
+	{0x81, 0x01, 0x04, 0x47, 0x03, 0x0a, 0x0d, 0x0d, 0xFF},	//16X
+	{0x81, 0x01, 0x04, 0x47, 0x03, 0x0b, 0x09, 0x0c, 0xFF},	//17X
+	{0x81, 0x01, 0x04, 0x47, 0x03, 0x0c, 0x04, 0x06, 0xFF},	//18X
+	{0x81, 0x01, 0x04, 0x47, 0x03, 0x0c, 0x0d, 0x0c, 0xFF},	//19X
+	{0x81, 0x01, 0x04, 0x47, 0x03, 0x0d, 0x06, 0x00, 0xFF},	//20X
+	{0x81, 0x01, 0x04, 0x47, 0x03, 0x0d, 0x0d, 0x04, 0xFF},	//21X
+	{0x81, 0x01, 0x04, 0x47, 0x03, 0x0e, 0x03, 0x09, 0xFF},	//22X
+	{0x81, 0x01, 0x04, 0x47, 0x03, 0x0e, 0x09, 0x00, 0xFF},	//23X
+	{0x81, 0x01, 0x04, 0x47, 0x03, 0x0e, 0x0d, 0x0c, 0xFF},	//24X
+	{0x81, 0x01, 0x04, 0x47, 0x03, 0x0f, 0x01, 0x0e, 0xFF},	//25X
+	{0x81, 0x01, 0x04, 0x47, 0x03, 0x0f, 0x05, 0x07, 0xFF},	//26X
+	{0x81, 0x01, 0x04, 0x47, 0x03, 0x0f, 0x08, 0x0a, 0xFF},	//27X
+	{0x81, 0x01, 0x04, 0x47, 0x03, 0x0f, 0x0b, 0x06, 0xFF},	//28X
+	{0x81, 0x01, 0x04, 0x47, 0x03, 0x0f, 0x0d, 0x0c, 0xFF},	//29X
+	{0x81, 0x01, 0x04, 0x47, 0x04, 0x00, 0x00, 0x00, 0xFF},	//30X * 1X
+    {0x81, 0x01, 0x04, 0x47, 0x06, 0x00, 0x00, 0x00, 0xFF}, //30X * 2X
+    {0x81, 0x01, 0x04, 0x47, 0x06, 0x0a, 0x08, 0x00, 0xFF}, //30X * 3X
+    {0x81, 0x01, 0x04, 0x47, 0x07, 0x00, 0x00, 0x00, 0xFF}, //30X * 4X
+    {0x81, 0x01, 0x04, 0x47, 0x07, 0x03, 0x00, 0x00, 0xFF}, //30X * 5X
+    {0x81, 0x01, 0x04, 0x47, 0x07, 0x05, 0x04, 0x00, 0xFF}, //30X * 6X
+    {0x81, 0x01, 0x04, 0x47, 0x07, 0x06, 0x0c, 0x00, 0xFF}, //30X * 7X
+    {0x81, 0x01, 0x04, 0x47, 0x07, 0x08, 0x00, 0x00, 0xFF}, //30X * 8X
+    {0x81, 0x01, 0x04, 0x47, 0x07, 0x08, 0x0c, 0x00, 0xFF}, //30X * 9X
+    {0x81, 0x01, 0x04, 0x47, 0x07, 0x09, 0x08, 0x00, 0xFF}, //30X * 10X
+    {0x81, 0x01, 0x04, 0x47, 0x07, 0x0a, 0x00, 0x00, 0xFF}, //30X * 11X
+    {0x81, 0x01, 0x04, 0x47, 0x07, 0x0a, 0x0c, 0x00, 0xFF}  //30X * 12X
+};
 
 rt_err_t uart_hook_callback(rt_device_t dev, rt_size_t sz)
 {
@@ -109,13 +158,16 @@ static void track_data_recv_entry(void* parameter)
 {
     struct guardian_environment *env = RT_NULL;
     rt_uint8_t* pbuf;
-    rt_size_t szbuf = 0;;
+    rt_size_t szbuf = 0;
+	rt_size_t SIZE = TRACK_ACK_PKT_SIZE;
+	rt_uint8_t HEADER = TRACK_ACK_PKT_HEADER;
+	rt_uint8_t ADDR = TRACK_ACK_PKT_ADDR;
     rt_err_t result;
     rt_device_t dev = RT_NULL;
     static shb_serialctrlpkt ctrlpkt;
     rt_size_t pktsz;
     rt_uint8_t lost_count = 0;
-		rt_uint8_t ctrl_count = 0;
+	rt_uint8_t ctrl_count = 0;
     rt_bool_t on_tracing = RT_FALSE;
     
     PID_t pid_x, pid_y;
@@ -129,8 +181,8 @@ static void track_data_recv_entry(void* parameter)
     dev = rt_device_find(TRACK_UARTPORT_NAME);
     RT_ASSERT(dev != RT_NULL);
 		
-    pid_init(&pid_x, 1.4f, 0.02f, 0.5f);
-    pid_init(&pid_y, 1.4f, 0.02f, 0.5f);
+    pid_init(&pid_x, 1.0f, 0.02f, 0.7f);
+    pid_init(&pid_y, 1.0f, 0.02f, 0.7f);
     
     pid_setThreshold(&pid_x, 500.0f, 200.0f, 0.02f);
     pid_setThreshold(&pid_y, 500.0f, 200.0f, 0.02f);
@@ -145,7 +197,7 @@ static void track_data_recv_entry(void* parameter)
     
     while (1)
     {
-        result = rt_sem_take(semaph, RT_WAITING_FOREVER);
+		result = rt_sem_take(semaph, RT_WAITING_FOREVER);
         
         if(result == -RT_ETIMEOUT)
             continue; 
@@ -154,85 +206,152 @@ static void track_data_recv_entry(void* parameter)
         case 0:
         case 1:
             szbuf += rt_device_read(dev, 0, pbuf + szbuf, 1);
-            if (pbuf[0] != TRACK_ACK_PKT_HEADER)
-                szbuf = 0;
+            if (pbuf[0] == TRACK_ACK_PKT_HEADER)
+            {
+				SIZE = TRACK_ACK_PKT_SIZE;
+				HEADER = TRACK_ACK_PKT_HEADER;
+				ADDR = TRACK_ACK_PKT_ADDR;
+			}
+			else if(pbuf[0] == ZOOM_ACK_PKT_HEADER)
+			{
+				SIZE = ZOOM_ACK_PKT_SIZE;
+				HEADER = ZOOM_ACK_PKT_HEADER;
+				ADDR = ZOOM_ACK_PKT_ADDR;
+			}
+			else
+			{
+				szbuf = 0;
+			}
             break;
         default:
-            szbuf += rt_device_read(dev, 0, pbuf + szbuf, TRACK_ACK_PKT_SIZE - szbuf);
+            szbuf += rt_device_read(dev, 0, pbuf + szbuf, SIZE - szbuf);
             break;
         }
-        // should never happened.
-        if (szbuf != TRACK_ACK_PKT_SIZE)
+		// should never happened.
+        if (szbuf != SIZE)
             continue;
         
         szbuf = 0;
         // check packet addr byte, shouled 0x01.
-        if (pbuf[1] != TRACK_ACK_PKT_ADDR) {
-            LOG_D("tracing packet addr %d, error\n", pbuf[1]);
+        if (pbuf[1] != ADDR)
             continue;
-        }
-        
-        if ((pbuf[6] & 0x02) != 0x00)
-        {
-            on_tracing = RT_TRUE;
-            lost_count = 0;
-            
-            float deffer_x, deffer_y;
-            
-            deffer_x = (float)*(rt_int16_t*)&pbuf[2];
-            deffer_y = (float)*(rt_int16_t*)&pbuf[4];
-            
-            env->trck_err_x = pid_update(&pid_x, deffer_x);
-						env->trck_err_y = pid_update(&pid_y, deffer_y);
-            
-            LOG_D("tracing %d %d", env->trck_err_x, env->trck_err_y);
-            
-            if ( ctrl_count < 11)
-                ctrl_count++;
-            else {
-                rt_sem_release(env->sh_ptz);
-                ctrl_count = 0;
-            }
-        }
-        else
-        {
-            if (on_tracing == RT_FALSE)
-                continue;
-            
-            if (lost_count++ < 1)
-                continue;
-            
-            if (env->trck_incharge == RT_TRUE)
-            {
-                env->trck_lost = RT_TRUE;
-                
-                /* stop Tracing module. */
-                pktsz = sizeof(shb_serialctrlpkt);
-                rt_memset(&ctrlpkt, 0x00, pktsz);
+		if(pbuf[0] == TRACK_ACK_PKT_HEADER && pbuf[1] == TRACK_ACK_PKT_ADDR)
+		{
+			if ((pbuf[6] & 0x02) != 0x00)
+			{
+				on_tracing = RT_TRUE;
+				lost_count = 0;
+				
+				float deffer_x, deffer_y;
+				
+				deffer_x = (float)*(rt_int16_t*)&pbuf[2];
+				deffer_y = (float)*(rt_int16_t*)&pbuf[4];
+				
+				env->trck_err_x = pid_update(&pid_x, deffer_x);
+				env->trck_err_y = pid_update(&pid_y, deffer_y);
+				
+				LOG_D("tracing %d %d", env->trck_err_x, env->trck_err_y);
+				
+				if ( ctrl_count < 11)
+					ctrl_count++;
+				else {
+					rt_sem_release(env->sh_ptz);
+					ctrl_count = 0;
+				}
+			}
+			else
+			{
+				if (on_tracing == RT_FALSE)
+					continue;
+				
+				if (lost_count++ < 90)
+					continue;
+				
+				on_tracing = RT_FALSE;
+				
+				if (env->trck_incharge == RT_TRUE)
+				{
+					env->trck_lost = RT_TRUE;
+					
+					/* stop Tracing module. */
+					pktsz = sizeof(shb_serialctrlpkt);
+					rt_memset(&ctrlpkt, 0x00, pktsz);
 
-                ctrlpkt.HEADER = 0x7E7E;
-                ctrlpkt.ADDR = 0x44;
-                ctrlpkt.set_mode = 0x26;
-                
-                rt_uint8_t *ptr = (rt_uint8_t*)&ctrlpkt;
-                for(int i = 0; i < pktsz - 1; i++)
-                    ctrlpkt.checksum += *(ptr + i);
-                
-                ptr = rt_mp_alloc(mempool, RT_WAITING_FOREVER);
-                rt_memcpy(ptr, &ctrlpkt, pktsz);
-                rt_mb_send(mailbox, (rt_ubase_t)ptr);
-                
-            }
-						/* stop PanTiltZoom */
-                env->trck_err_x = 0;
-                env->trck_err_y = 0;
-                rt_sem_release(env->sh_ptz);
-                
-                LOG_D("tracing target lost");
-        }
-            
-        // got a complete packet, decode now.
-        
+					ctrlpkt.HEADER = 0x7E7E;
+					ctrlpkt.ADDR = 0x44;
+					ctrlpkt.set_mode = 0x26;
+					
+					rt_uint8_t *ptr = (rt_uint8_t*)&ctrlpkt;
+					for(int i = 0; i < pktsz - 1; i++)
+						ctrlpkt.checksum += *(ptr + i);
+					
+					ptr = rt_mp_alloc(mempool, RT_WAITING_FOREVER);
+					rt_memcpy(ptr, &ctrlpkt, pktsz);
+					rt_mb_send(mailbox, (rt_ubase_t)ptr);	
+				}
+				/* stop PanTiltZoom */
+				env->trck_err_x = 0;
+				env->trck_err_y = 0;
+				rt_sem_release(env->sh_ptz);
+				
+				LOG_D("tracing target lost");
+			}
+		}
+		else if(pbuf[0] == 0x90 && pbuf[1] == 0x50)
+		{
+			rt_uint8_t nZoom = 0;
+			rt_uint16_t nZoomNow, nZoomPrev, nZoomNext;
+
+			nZoomNow = ((pbuf[2] & 0x0F) << 12) | \
+					   ((pbuf[3] & 0x0F) << 8) | \
+					   ((pbuf[4] & 0x0F) << 4) | \
+					   ((pbuf[5] & 0x0F) << 0);
+
+			for ( nZoom = 0; nZoom < 41; nZoom++)
+			{
+				int res = rt_memcmp(&VISCA_ZOOM[nZoom][4], &pbuf[2], 4);
+				if (0 == res)
+					break;
+				if (res > 0)
+				{
+					if (nZoom == 40)
+						continue;
+					else
+					{
+						nZoomPrev = ((VISCA_ZOOM[nZoom - 1][4] & 0x0F) << 12) | \
+									((VISCA_ZOOM[nZoom - 1][5] & 0x0F) << 8) | \
+									((VISCA_ZOOM[nZoom - 1][6] & 0x0F) << 4) | \
+									((VISCA_ZOOM[nZoom - 1][7] & 0x0F) << 0);
+						
+						nZoomNext = ((VISCA_ZOOM[nZoom][4] & 0x0F) << 12) | \
+									((VISCA_ZOOM[nZoom][5] & 0x0F) << 8) | \
+									((VISCA_ZOOM[nZoom][6] & 0x0F) << 4) | \
+									((VISCA_ZOOM[nZoom][7] & 0x0F) << 0);
+						
+						if ((nZoomNext - nZoomNow) > (nZoomNow - nZoomPrev))
+						{
+							nZoom--;
+							break;
+						}		
+						else
+							break;
+					}
+				}
+			}
+			
+			if (nZoom == 41) 
+			{
+				nZoom = 40;
+			}
+			
+			env->cam_zoom_pos = nZoom;
+			rt_kprintf("env->cam_zoom_pos  %d \n",env->cam_zoom_pos);
+			env->cam_getpos_tick = rt_tick_get();
+		}
+		else
+		{
+			
+		}
     }
 }
 
@@ -252,7 +371,7 @@ void track_resolving_entry(void* parameter)
     dev = rt_device_find(TRACK_UARTPORT_NAME);
     RT_ASSERT(dev != RT_NULL);
 	
-		rt_device_open(dev, RT_DEVICE_OFLAG_RDWR | RT_DEVICE_FLAG_INT_RX);
+	rt_device_open(dev, RT_DEVICE_OFLAG_RDWR | RT_DEVICE_FLAG_INT_RX);
 
     semaph = rt_sem_create(TRACK_SEMAPHORE_RX_NAME, 0, RT_IPC_FLAG_FIFO);
     RT_ASSERT(semaph != RT_NULL);
@@ -349,12 +468,131 @@ void track_resolving_entry(void* parameter)
             
             LOG_D("tracker stop recording video.");
         }
-        else if (env->trck_action == TRACK_ACTION_SNAP)
+		else if (env->trck_action == TRACK_ACTION_CAPTURE)
         {
             ctrlpkt.set_mode = 0x7C;
             ctrlpkt.set_fuction = 0x02;
             
-            LOG_D("tracker snap a picture.");
+            LOG_D("TRACK_ACTION_CAPTURE");
+        }
+        else if (env->trck_action == TRACK_ACTION_PIP_MODE)
+        {
+			ctrlpkt.set_mode = 0x85;
+            if(env->cam_pip_mode == 0)
+			{
+				ctrlpkt.set_video_source=0x00;
+			}
+			else if(env->cam_pip_mode == 1)
+			{
+				ctrlpkt.set_video_source=0x02;
+			}
+			else if(env->cam_pip_mode == 2)
+			{
+				ctrlpkt.set_video_source=0x03;
+			}
+			else
+			{
+				ctrlpkt.set_video_source=0x01;
+			}
+        }
+		else if (env->trck_action == TRACK_ACTION_IRCOLOR)
+        {
+			ctrlpkt.set_mode = 0x84;
+            if(env->irs_color == 0)
+			{
+				ctrlpkt.set_fuction=0x00;
+				ctrlpkt.set_ircolor=0x00;
+			}
+			else if(env->irs_color == 1)
+			{
+				ctrlpkt.set_fuction=0x00;
+				ctrlpkt.set_ircolor=0x01;
+			}
+			else if(env->irs_color == 2)
+			{
+				ctrlpkt.set_fuction=0x04;
+			}
+			else if(env->irs_color == 3)
+			{
+				ctrlpkt.set_fuction=0x02;
+			}
+			else if(env->irs_color == 4)
+			{
+				ctrlpkt.set_fuction=0x01;
+			}
+			else
+			{
+				ctrlpkt.set_fuction=0x03;
+			}
+        }
+		else if (env->trck_action == TRACK_ACTION_IRZOOM)
+        {
+			ctrlpkt.set_mode = 0x78;
+            if(env->irs_zoom == 0)
+			{
+				ctrlpkt.set_zoom=0x01;
+			}
+			else if(env->irs_zoom == 1)
+			{
+				ctrlpkt.set_zoom=0x02;
+			}
+			else if(env->irs_zoom == 2)
+			{
+				ctrlpkt.set_zoom=0x03;
+			}
+			else if(env->irs_zoom == 3)
+			{
+				ctrlpkt.set_zoom=0x04;
+			}
+			else
+			{
+				ctrlpkt.set_zoom=0x05;
+			}
+			
+			//pip mode
+			if(env->cam_pip_mode == 0)
+			{
+				ctrlpkt.set_video_source=0x00;
+			}
+			else if(env->cam_pip_mode == 1)
+			{
+				ctrlpkt.set_video_source=0x02;
+			}
+			else if(env->cam_pip_mode == 2)
+			{
+				ctrlpkt.set_video_source=0x03;
+			}
+			else
+			{
+				ctrlpkt.set_video_source=0x01;
+			}
+			//irs color
+			if(env->irs_color == 0)
+			{
+				ctrlpkt.set_fuction=0x00;
+				ctrlpkt.set_ircolor=0x00;
+			}
+			else if(env->irs_color == 1)
+			{
+				ctrlpkt.set_fuction=0x00;
+				ctrlpkt.set_ircolor=0x01;
+			}
+			else if(env->irs_color == 2)
+			{
+				ctrlpkt.set_fuction=0x04;
+			}
+			else if(env->irs_color == 3)
+			{
+				ctrlpkt.set_fuction=0x02;
+			}
+			else if(env->irs_color == 4)
+			{
+				ctrlpkt.set_fuction=0x01;
+			}
+			else
+			{
+				ctrlpkt.set_fuction=0x03;
+			}
         }
         else
             continue;

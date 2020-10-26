@@ -135,56 +135,29 @@ void zingto_resolving_entry(void* parameter)
             break;
         case 0x01:  // pitch -
             env->ch_value[1] = SBUS_VALUE_MEDIAN + (SBUS_VALUE_MAXIMUM - SBUS_VALUE_MEDIAN) * speedlv / 10.f;
-						env->ch_value[3] = SBUS_VALUE_MEDIAN;
             env->ptz_action = PANTILT_ACTION_NULL;
             ptz_request = RT_TRUE;
             break;
         case 0x02:  // pitch +
             env->ch_value[1] = SBUS_VALUE_MEDIAN + (SBUS_VALUE_MININUM - SBUS_VALUE_MEDIAN) * speedlv / 10.f;
-						env->ch_value[3] = SBUS_VALUE_MEDIAN;
             env->ptz_action = PANTILT_ACTION_NULL;
             ptz_request = RT_TRUE;
             break;
         case 0x03:  // yaw -
-						env->ch_value[1] = SBUS_VALUE_MEDIAN;
             env->ch_value[3] = SBUS_VALUE_MEDIAN + (SBUS_VALUE_MAXIMUM - SBUS_VALUE_MEDIAN) * speedlv / 10.f;
             env->ptz_action = PANTILT_ACTION_NULL;
             ptz_request = RT_TRUE;
             break;
         case 0x04:  // yaw +
-						env->ch_value[1] = SBUS_VALUE_MEDIAN;
             env->ch_value[3] = SBUS_VALUE_MEDIAN + (SBUS_VALUE_MININUM - SBUS_VALUE_MEDIAN) * speedlv / 10.f;
-            env->ptz_action = PANTILT_ACTION_NULL;
-            ptz_request = RT_TRUE;
-            break;
-				case 0x19:  // left_down
-						env->ch_value[1] = SBUS_VALUE_MEDIAN + (SBUS_VALUE_MAXIMUM - SBUS_VALUE_MEDIAN) * speedlv / 10.f;
-            env->ch_value[3] = SBUS_VALUE_MEDIAN + (SBUS_VALUE_MININUM - SBUS_VALUE_MEDIAN) * speedlv / 10.f;
-            env->ptz_action = PANTILT_ACTION_NULL;
-            ptz_request = RT_TRUE;
-            break;
-				case 0x1a:  // left_up
-						env->ch_value[1] = SBUS_VALUE_MEDIAN + (SBUS_VALUE_MININUM - SBUS_VALUE_MEDIAN) * speedlv / 10.f;
-            env->ch_value[3] = SBUS_VALUE_MEDIAN + (SBUS_VALUE_MININUM - SBUS_VALUE_MEDIAN) * speedlv / 10.f;
-            env->ptz_action = PANTILT_ACTION_NULL;
-            ptz_request = RT_TRUE;
-            break;
-				case 0x1b:  // right_up
-						env->ch_value[1] = SBUS_VALUE_MEDIAN + (SBUS_VALUE_MININUM - SBUS_VALUE_MEDIAN) * speedlv / 10.f;
-            env->ch_value[3] = SBUS_VALUE_MEDIAN + (SBUS_VALUE_MAXIMUM - SBUS_VALUE_MEDIAN) * speedlv / 10.f;
-            env->ptz_action = PANTILT_ACTION_NULL;
-            ptz_request = RT_TRUE;
-            break;
-				case 0x1c:  // right_down
-						env->ch_value[1] = SBUS_VALUE_MEDIAN + (SBUS_VALUE_MAXIMUM - SBUS_VALUE_MEDIAN) * speedlv / 10.f;
-            env->ch_value[3] = SBUS_VALUE_MEDIAN + (SBUS_VALUE_MAXIMUM - SBUS_VALUE_MEDIAN) * speedlv / 10.f;
             env->ptz_action = PANTILT_ACTION_NULL;
             ptz_request = RT_TRUE;
             break;
         case 0x05:  // zoom out
             if (speedlv < 2) 
                 speedlv = 2;
-            env->cam_zoom_speed = speedlv;
+			else
+                env->cam_zoom_speed = speedlv;
             cam_eval = CAMERA_CMD_ZOOM_OUT;
             cam_eval |= CAMERA_CMD_ZOOM_GETPOS;
             cam_request = RT_TRUE;
@@ -192,7 +165,8 @@ void zingto_resolving_entry(void* parameter)
         case 0x06:  // zoom in
             if (speedlv < 2) 
                 speedlv = 2;
-            env->cam_zoom_speed = speedlv;
+			else
+                env->cam_zoom_speed = speedlv;
             cam_eval = CAMERA_CMD_ZOOM_IN;
             cam_eval |= CAMERA_CMD_ZOOM_GETPOS;
             cam_request = RT_TRUE;
@@ -204,14 +178,17 @@ void zingto_resolving_entry(void* parameter)
             cam_request = RT_TRUE;
             break;
         case 0x08:  // head free.
+			env->ptz_action = PANTILT_ACTION_NULL;
             env->ptz_mode = PANTILT_MODE_HEADFREE;
             ptz_request = RT_TRUE;
             break;
         case 0x09:  // head lock.
+			env->ptz_action = PANTILT_ACTION_NULL;
             env->ptz_mode = PANTILT_MODE_HEADLOCK;
             ptz_request = RT_TRUE;
             break;
         case 0x0A:  // head down.
+			env->ptz_action = PANTILT_ACTION_NULL;
             env->ptz_mode = PANTILT_MODE_HEADDOWN;
             ptz_request = RT_TRUE;
             break;
@@ -220,40 +197,32 @@ void zingto_resolving_entry(void* parameter)
             ptz_request = RT_TRUE;
             break;
         case 0x0C:  // record on
-            env->cam_zoom_speed = 0;
-            cam_eval = CAMERA_CMD_RECORD_ON;
-            cam_request = RT_TRUE;
+			env->trck_action = TRACK_ACTION_RECORD_ON;
+            trck_request = RT_TRUE;
+			env->cam_recording = RT_TRUE;
             break;
         case 0x0D:  // record off
-            env->cam_zoom_speed = 0;
-            cam_eval = CAMERA_CMD_RECORD_OFF;
-            cam_request = RT_TRUE;
+			env->trck_action = TRACK_ACTION_RECORD_OFF;
+            trck_request = RT_TRUE;
+			env->cam_recording = RT_FALSE;
             break;
         case 0x0E:  // capture
-            env->cam_zoom_speed = 0;
-            cam_eval = CAMERA_CMD_CAPTURE;
-            cam_request = RT_TRUE;
+			env->trck_action = TRACK_ACTION_CAPTURE;
+            trck_request = RT_TRUE;
             break;
         case 0x11:
             LOG_W("calibrate gyro temp");
             env->ptz_action = PANTILT_ACTION_CALIBRATE;
             ptz_request = RT_TRUE;  
             break;
-				case 0x12:  // ask
+		case 0x12:  // ask
             env->ptz_action = PANTILT_ACTION_ASK;
             ptz_request = RT_TRUE;
             break;
         case 0x13:  // pip mode 
-            if (speedlv == 0)
-                cam_eval = CAMERA_CMD_PIP_MODE3;
-            else if (speedlv == 1)
-                cam_eval = CAMERA_CMD_PIP_MODE4;
-            else if (speedlv == 2)
-                cam_eval = CAMERA_CMD_PIP_MODE1;
-            else
-                cam_eval = CAMERA_CMD_PIP_MODE2;
-            
-            cam_request = RT_TRUE;
+            env->trck_action = TRACK_ACTION_PIP_MODE;
+			env->cam_pip_mode = speedlv;
+            trck_request = RT_TRUE;
             break;
         case 0x14:  // track prepare.
             env->trck_action = TRACK_ACTION_PREPARE;
@@ -268,14 +237,14 @@ void zingto_resolving_entry(void* parameter)
             trck_request = RT_TRUE;
             break;
         case 0x17:  // color mode 
-            env->ptz_action = PANTILT_ACTION_IRCOLOR;
+            env->trck_action = TRACK_ACTION_IRCOLOR;
             env->irs_color = speedlv;
-            ptz_request = RT_TRUE;        
+            trck_request = RT_TRUE;        
             break;
         case 0x18:  // ir zoom 
-            env->ptz_action = PANTILT_ACTION_IRZOOM;
+            env->trck_action = TRACK_ACTION_IRZOOM;
             env->irs_zoom = speedlv;
-            ptz_request = RT_TRUE;
+            trck_request = RT_TRUE;
             break;
         default:
             LOG_W("unknown opcode, %02X", opcode);

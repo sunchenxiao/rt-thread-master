@@ -61,10 +61,11 @@ void zingto_resolving_entry(void* parameter)
     RT_ASSERT(semaph != RT_NULL);
     
     // set uart in 57600, 8N1.
-    struct serial_configure config = RT_SERIAL_CONFIG_DEFAULT;
-	config.baud_rate = BAUD_RATE_57600;
-    rt_device_control(dev, RT_DEVICE_CTRL_CONFIG, &config);    
-    rt_device_set_rx_indicate(dev, uart_hook_callback);
+//    struct serial_configure config = RT_SERIAL_CONFIG_DEFAULT;
+//	config.baud_rate = BAUD_RATE_57600;
+//    rt_device_control(dev, RT_DEVICE_CTRL_CONFIG, &config);    
+    
+	rt_device_set_rx_indicate(dev, uart_hook_callback);
     
     LOG_I("initialization finish, start!");
 
@@ -174,18 +175,24 @@ void zingto_resolving_entry(void* parameter)
 			env->cam_zoom_speed = 0;
             cam_eval = CAMERA_CMD_CAPTURE;
             cam_request = RT_TRUE;
+			env->trck_action = TRACK_ACTION_CAPTURE;
+            trck_request = RT_TRUE;
 		}
 		else if(pbuf[2]==0x12&&pbuf[3]==0x01) //start record
 		{
 			env->cam_zoom_speed = 0;
             cam_eval = CAMERA_CMD_RECORD_ON;
             cam_request = RT_TRUE;
+			env->trck_action = TRACK_ACTION_RECORD_ON;
+            trck_request = RT_TRUE;
 		}
 		else if(pbuf[2]==0x12&&pbuf[3]==0x02) //stop record
 		{
 			env->cam_zoom_speed = 0;
             cam_eval = CAMERA_CMD_RECORD_OFF;
             cam_request = RT_TRUE;
+			env->trck_action = TRACK_ACTION_RECORD_OFF;
+            trck_request = RT_TRUE;
 		}
 		else if(pbuf[2]==0x13&&pbuf[3]==0x00) //header free
 		{
@@ -235,6 +242,11 @@ void zingto_resolving_entry(void* parameter)
 		{
 			env->ptz_action = PANTILT_ACTION_IRCOLOR;
             env->irs_color = pbuf[4];
+            ptz_request = RT_TRUE;  
+		}
+		else if(pbuf[2]==0x16&&pbuf[3]==0x00) //location
+		{
+			env->ptz_action = PANTILT_ACTION_ASK;
             ptz_request = RT_TRUE;  
 		}
 		else
