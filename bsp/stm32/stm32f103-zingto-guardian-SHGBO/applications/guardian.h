@@ -78,6 +78,7 @@ void track_resolving_entry(void* parameter);
 
 #define TRACK_ACTION_NULL               (0x00)
 #define TRACK_ACTION_PREPARE            (0x01)
+#define TRACK_ACTION_ZOOM_SHOW          (0x02)
 #define TRACK_ACTION_TRACE_START        (0x03)
 #define TRACK_ACTION_TRACE_STOP         (0x04)
 #define TRACK_ACTION_RECORD_ON          (0x05)
@@ -89,6 +90,8 @@ void track_resolving_entry(void* parameter);
 
 /* zingto kernel function thread */
 void zingto_resolving_entry(void* parameter);
+
+void ask_resolving_entry(void* parameter);
 
 /* environment struct */
 struct guardian_environment
@@ -114,6 +117,10 @@ struct guardian_environment
     rt_int8_t       irs_zoom;
 	rt_uint8_t      ptz_mode;
     rt_sem_t        sh_ptz;
+	
+	float           ptz_yaw;
+    float           ptz_pitch;
+    float           ptz_roll;
     
     // User
     rt_bool_t       user_incharge;

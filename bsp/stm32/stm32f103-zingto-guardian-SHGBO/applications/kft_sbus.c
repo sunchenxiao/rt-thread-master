@@ -190,8 +190,8 @@ void sbus_resolving_entry(void* parameter)
                     }
                 }*/
                 break;                
-            case 1: // pitch
-            case 3: // yaw
+            case 6: // pitch
+            case 8: // yaw
                 if (pval[i] != env->ch_value[i])
                 {                    
                     env->ch_change[i] = RT_TRUE;
@@ -201,7 +201,7 @@ void sbus_resolving_entry(void* parameter)
                     ptz_request = RT_TRUE;
                 }
                 break;
-            case 2: // zoom
+            case 7: // zoom
 			{
 				rt_int8_t tmpuc = 0;
                 rt_int16_t differ = 0;
@@ -245,7 +245,7 @@ void sbus_resolving_entry(void* parameter)
                 }
 			}
                 break;
-            case 4: // done
+            case 9: // done
                 if (pval[i] < SBUS_THRESHOLD_INVAILED)
                     tmp_status = SBUS_INVAILD;
                 else if (pval[i] < SBUS_THRESHOLD_LOW)
@@ -272,7 +272,7 @@ void sbus_resolving_entry(void* parameter)
                         ptz_request = RT_FALSE;
                 }
                 break;        
-            case 5: // done
+            case 10: // done
                 if (pval[i] < SBUS_THRESHOLD_INVAILED)
                     tmp_status = SBUS_INVAILD;
                 else if (pval[i] < SBUS_THRESHOLD_LOW)
@@ -308,7 +308,7 @@ void sbus_resolving_entry(void* parameter)
                     
                 }
                 break;
-            case 6: // track
+            case 11: // track
                 if (pval[i] < SBUS_THRESHOLD_INVAILED)
                     tmp_status = SBUS_INVAILD;
                 else if (pval[i] < SBUS_THRESHOLD_LOW)
@@ -344,7 +344,7 @@ void sbus_resolving_entry(void* parameter)
                     }
                 }
                 break;
-            case 7: // done
+            case 12: // done
                 if (pval[i] < SBUS_THRESHOLD_INVAILED)
                     tmp_status = SBUS_INVAILD;
                 else if (pval[i] < SBUS_THRESHOLD_LOW)
@@ -365,7 +365,7 @@ void sbus_resolving_entry(void* parameter)
                     }
                 }
                 break;
-            case 8: // done
+            case 13: // done
                 if (pval[i] < SBUS_THRESHOLD_INVAILED)
                     tmp_status = SBUS_INVAILD;
                 else if (pval[i] < SBUS_THRESHOLD_LOW)
@@ -399,7 +399,7 @@ void sbus_resolving_entry(void* parameter)
                     }
                 }
                 break;
-			case 9: // done
+			case 14: // done
                 if (pval[i] < SBUS_THRESHOLD_INVAILED)
                     tmp_status = SBUS_INVAILD;
                 else if (pval[i] < SBUS_THRESHOLD_LOW)

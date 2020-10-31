@@ -423,7 +423,23 @@ void track_resolving_entry(void* parameter)
         ctrlpkt.HEADER = 0x7E7E;
         ctrlpkt.ADDR = 0x44;
         
-        if (env->trck_action == TRACK_ACTION_PREPARE)
+		if (env->trck_action == TRACK_ACTION_ZOOM_SHOW)
+        {
+			ctrlpkt.__reserved1 = 0x10;
+			ctrlpkt.set_mode = 0x83;
+			ctrlpkt.set_fuction = 0x30;
+            
+            float  zoomf32 = 0.f;
+            if (env->cam_zoom_pos < 10)
+                zoomf32 = env->cam_zoom_pos + 1;                    // Optical ZOOM.
+            else             
+                zoomf32 = 10;     // Optical ZOOM 30X combine Digital ZOOM.
+            
+			rt_memcpy(ctrlpkt.__reserved8 + 4, &zoomf32, 4);
+            rt_memcpy(&ctrlpkt.set_ircolor, &env->ptz_yaw, sizeof(float));
+			rt_memcpy(ctrlpkt.__reserved8, &env->ptz_pitch, sizeof(float));           
+        }
+        else if (env->trck_action == TRACK_ACTION_PREPARE)
         {
             ctrlpkt.set_mode = 0x71;
             ctrlpkt.set_fuction = 0xFF;

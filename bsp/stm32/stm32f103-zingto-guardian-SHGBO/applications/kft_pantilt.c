@@ -12,6 +12,7 @@
 #include <rtdevice.h>
 #include <board.h>
 #include <stdlib.h>
+#include <math.h>
 
 #include "guardian.h"
 
@@ -245,6 +246,30 @@ static void pantilt_data_recv_entry(void* parameter)
 			send_data[3]=pbuf[70];
 			send_data[4]=pbuf[71];
 			send_data[5]=pbuf[72];
+			
+			rt_int16_t  temp = 0;
+			temp = *(rt_int16_t*)&pbuf[71];
+			float yaw = temp * 0.02197265625f;
+			yaw = yaw - floor(yaw / 360.0f) * 360.0f;
+			if ( yaw > 180.0f ) yaw = yaw - 360.0f;// range -180 and 180 degree.
+			
+			env->ptz_yaw = yaw;
+			
+			temp = *(rt_int16_t*)&pbuf[69];
+			float pitch = temp * 0.02197265625f;
+			pitch = pitch - floor(pitch / 360.0f) * 360.0f;
+			if ( pitch > 180.0f ) pitch = pitch - 360.0f;
+			pitch = pitch * -1.0f;
+			
+			env->ptz_pitch = pitch;
+			
+			env->ptz_roll = .0f;
+			
+			LOG_D("PTZ: %d %d", *(rt_int16_t*)&pbuf[69], *(rt_int16_t*)&pbuf[71]);
+			
+			// notice the tracker thread to show.
+			env->trck_action = TRACK_ACTION_ZOOM_SHOW;
+			rt_sem_release(env->sh_track);
 		}
 		else if(pbuf[0] == ANSWER_PKT_HEADER1 && szbuf == ANSWER_PKT_SIZE1)
 		{
@@ -561,11 +586,11 @@ void pantilt_resolving_entry(void* parameter)
                             dval_roll = PANTILT_VALUE_MAXIMUM;
                     }
                     
-                    dval_pitch = env->ch_value[1] - SBUS_VALUE_MEDIAN;    // pitch
+                    dval_pitch = env->ch_value[6] - SBUS_VALUE_MEDIAN;    // pitch
                     if (abs(dval_pitch) < SBUS_VALUE_IGNORE)
                         dval_pitch = 0;
                    
-                    dval_yaw = env->ch_value[3] - SBUS_VALUE_MEDIAN;    // yaw
+                    dval_yaw = env->ch_value[8] - SBUS_VALUE_MEDIAN;    // yaw
                     if (abs(dval_yaw) < SBUS_VALUE_IGNORE)
                         dval_yaw = 0;
                     
@@ -681,5 +706,24 @@ void pantilt_resolving_entry(void* parameter)
         }
     }
     // never be here.
+}
+void ask_resolving_entry(void* parameter)
+{
+	struct guardian_environment *env = RT_NULL;
+	env = (struct guardian_environment *)parameter;
+	RT_ASSERT(env != RT_NULL);
+	
+	while(RT_TRUE)
+	{
+		rt_uint8_t *pbuf = RT_NULL;
+		
+		pbuf = rt_mp_alloc(mempool, RT_WAITING_FOREVER);
+		rt_memcpy(pbuf, ptz_askctrlpkt, PTZ_ASK_PKT_SIZE);
+		rt_mb_send(mailbox, (rt_ubase_t)pbuf);
+		
+		rt_event_send(env->ev_camera, CAMERA_CMD_ZOOM_GETPOS);
+		
+		rt_thread_mdelay(500);
+	}
 }
 
