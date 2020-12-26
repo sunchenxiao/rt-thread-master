@@ -87,6 +87,7 @@ void track_resolving_entry(void* parameter);
 #define TRACK_ACTION_PIP_MODE			(0x08)
 #define TRACK_ACTION_IRCOLOR			(0x09)
 #define TRACK_ACTION_IRZOOM				(0x0A)
+#define TRACK_ACTION_POINT_START        (0x0B)
 
 /* zingto kernel function thread */
 void zingto_resolving_entry(void* parameter);
@@ -117,6 +118,8 @@ struct guardian_environment
     rt_int8_t       irs_zoom;
 	rt_uint8_t      ptz_mode;
     rt_sem_t        sh_ptz;
+	rt_uint8_t      send_flag;
+	rt_uint8_t 		ask_laser_distance;
 	
 	float           ptz_yaw;
     float           ptz_pitch;
@@ -133,6 +136,8 @@ struct guardian_environment
     rt_int16_t      trck_err_y;
     rt_uint8_t      trck_action;
     rt_sem_t        sh_track;
+	rt_int16_t		trck_offset_x;
+	rt_int16_t		trck_offset_y;
 };
 
 

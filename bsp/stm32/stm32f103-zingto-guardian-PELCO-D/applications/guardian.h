@@ -100,6 +100,7 @@ struct guardian_environment
     rt_bool_t       ch_change[SBUS_CHANNEL_NUMBER];
     sbus_status     ch_status[SBUS_CHANNEL_NUMBER];
     rt_uint16_t     ch_value[SBUS_CHANNEL_NUMBER];
+	rt_uint16_t     ch_value_uart[SBUS_CHANNEL_NUMBER];
     rt_tick_t       sbus_cali_tick;
     
     // Camera

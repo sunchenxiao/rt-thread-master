@@ -20,7 +20,7 @@
 #define DBG_COLOR
 #include <rtdbg.h>
 
-#define ZINGTO_UARTPORT_NAME "uart1"
+#define ZINGTO_UARTPORT_NAME "uart5"
 #define ZINGTO_SEMAPHORE_NAME "shZINGTO"
 
 
@@ -73,6 +73,9 @@ void zingto_resolving_entry(void* parameter)
     rt_device_control(dev, RT_DEVICE_CTRL_CONFIG, &config);
     
     rt_device_set_rx_indicate(dev, uart_hook_callback);
+	
+	env->send_flag=0;
+	env->ask_laser_distance=0;
     
     LOG_I("initialization finish, start!");
 
@@ -101,7 +104,7 @@ void zingto_resolving_entry(void* parameter)
         szbuf = 0;
         
         // check packet tail, vaild packet.
-        if ((pbuf[1] != ZINGTO_PKT_HEADER1) || (pbuf[3] != ZINGTO_PKT_TAIL0) || (pbuf[4] != ZINGTO_PKT_TAIL1))
+        if (pbuf[1] != ZINGTO_PKT_HEADER1)
             continue;
         
         opcode = pbuf[2];
@@ -154,27 +157,30 @@ void zingto_resolving_entry(void* parameter)
             ptz_request = RT_TRUE;
             break;
         case 0x05:  // zoom out
-            if (speedlv < 2) 
+			env->ask_laser_distance=1;
+            if (speedlv < 2)
                 speedlv = 2;
 			else
                 env->cam_zoom_speed = speedlv;
             cam_eval = CAMERA_CMD_ZOOM_OUT;
-            cam_eval |= CAMERA_CMD_ZOOM_GETPOS;
+            //cam_eval |= CAMERA_CMD_ZOOM_GETPOS;
             cam_request = RT_TRUE;
             break;
         case 0x06:  // zoom in
-            if (speedlv < 2) 
+			env->ask_laser_distance=1;
+            if (speedlv < 2)
                 speedlv = 2;
 			else
                 env->cam_zoom_speed = speedlv;
             cam_eval = CAMERA_CMD_ZOOM_IN;
-            cam_eval |= CAMERA_CMD_ZOOM_GETPOS;
+            //cam_eval |= CAMERA_CMD_ZOOM_GETPOS;
             cam_request = RT_TRUE;
             break;
         case 0x07:  // zoom stop
+			env->ask_laser_distance=1;
             env->cam_zoom_speed = 0;
             cam_eval = CAMERA_CMD_ZOOM_STOP;
-            cam_eval |= CAMERA_CMD_ZOOM_GETPOS;
+            //cam_eval |= CAMERA_CMD_ZOOM_GETPOS;
             cam_request = RT_TRUE;
             break;
         case 0x08:  // head free.
@@ -198,17 +204,29 @@ void zingto_resolving_entry(void* parameter)
             break;
         case 0x0C:  // record on
 			env->trck_action = TRACK_ACTION_RECORD_ON;
-            trck_request = RT_TRUE;
+			trck_request = RT_TRUE;
 			env->cam_recording = RT_TRUE;
+		
+//			env->cam_zoom_speed = 0;
+//            cam_eval = CAMERA_CMD_RECORD_ON;
+//            cam_request = RT_TRUE;
             break;
         case 0x0D:  // record off
 			env->trck_action = TRACK_ACTION_RECORD_OFF;
-            trck_request = RT_TRUE;
+          trck_request = RT_TRUE;
 			env->cam_recording = RT_FALSE;
+		
+//			env->cam_zoom_speed = 0;
+//            cam_eval = CAMERA_CMD_RECORD_OFF;
+//            cam_request = RT_TRUE;
             break;
         case 0x0E:  // capture
 			env->trck_action = TRACK_ACTION_CAPTURE;
-            trck_request = RT_TRUE;
+			trck_request = RT_TRUE;
+		
+//			env->cam_zoom_speed = 0;
+//            cam_eval = CAMERA_CMD_CAPTURE;
+//            cam_request = RT_TRUE;
             break;
         case 0x11:
             LOG_W("calibrate gyro temp");
@@ -246,6 +264,18 @@ void zingto_resolving_entry(void* parameter)
             env->irs_zoom = speedlv;
             trck_request = RT_TRUE;
             break;
+		case 0x19:  // point track 
+            env->trck_action = TRACK_ACTION_POINT_START;
+            env->trck_offset_x=((pbuf[3]-128)*1920/256+65536)%65536;
+			env->trck_offset_y=((pbuf[4]-128)*1080/256+65536)%65536;
+            trck_request = RT_TRUE;
+            break;
+		case 0x1a:
+			env->send_flag=0;
+			break;
+		case 0x1b:
+			env->send_flag=1;
+			break;
         default:
             LOG_W("unknown opcode, %02X", opcode);
             break;

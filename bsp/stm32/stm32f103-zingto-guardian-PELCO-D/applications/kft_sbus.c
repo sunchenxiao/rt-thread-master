@@ -192,7 +192,7 @@ void sbus_resolving_entry(void* parameter)
                 break;                
             case 1: // pitch
             case 3: // yaw
-                if (pval[i] != env->ch_value[i])
+                if (abs(pval[i] - env->ch_value[i]) > 10)
                 {                    
                     env->ch_change[i] = RT_TRUE;
                     env->ch_value[i] = pval[i];
@@ -474,7 +474,8 @@ void sbus_resolving_entry(void* parameter)
                 rt_sem_release(env->sh_ptz); // notify the PanTiltZoom.
             }
         }
-        else {
+        else 
+		{
             env->sbus_incharge = RT_FALSE;
         }
         

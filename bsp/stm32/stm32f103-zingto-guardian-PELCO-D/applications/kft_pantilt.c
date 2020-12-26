@@ -159,6 +159,7 @@ static void pantilt_data_send_entry(void* parameter)
     rt_ubase_t mail;
     rt_uint8_t* pbuf;
     rt_device_t dev = RT_NULL;
+	rt_device_t dev1 = RT_NULL;
     rt_uint32_t ubase32 = 0;
     rt_uint16_t ubase16 = 0;
     
@@ -167,6 +168,9 @@ static void pantilt_data_send_entry(void* parameter)
     
     dev = rt_device_find(PANTILT_UARTPORT_NAME);
     RT_ASSERT(dev != RT_NULL);
+	
+	dev1 = rt_device_find("uart1");
+    RT_ASSERT(dev1 != RT_NULL);
     
     LOG_I("send sub-thread, start!");
     
@@ -189,12 +193,12 @@ static void pantilt_data_send_entry(void* parameter)
         else if(ubase16 == IRSENSOR_COLOR_PKT_HEADER)
         {
             LOG_D("send to irsensor color");
-            rt_device_write(dev, 0, pbuf, IRSENSOR_COLOR_PKT_SIZE);
+            rt_device_write(dev1, 0, pbuf, IRSENSOR_COLOR_PKT_SIZE);
         }
         else if(ubase16 == IRSENSOR_ZOOM_PKT_HEADER)
         {
             LOG_D("send to irsensor zoom");
-            rt_device_write(dev, 0, pbuf, IRSENSOR_ZOOM_PKT_SIZE);
+            rt_device_write(dev1, 0, pbuf, IRSENSOR_ZOOM_PKT_SIZE);
         }
         else if(ubase16 == PANTILT_CALIB_PKT_HEADER)
         {
@@ -751,11 +755,11 @@ void pantilt_resolving_entry(void* parameter)
                             
                 ctrlpkt.HEADER = PANTILT_PKT_HEADER;
 
-                dval_pitch = env->ch_value[1] - SBUS_VALUE_MEDIAN;    // pitch
+                dval_pitch = env->ch_value_uart[1] - SBUS_VALUE_MEDIAN;    // pitch
                 if (abs(dval_pitch) < SBUS_VALUE_IGNORE)
                     dval_pitch = 0;
                
-                dval_yaw = env->ch_value[3] - SBUS_VALUE_MEDIAN;    // yaw
+                dval_yaw = env->ch_value_uart[3] - SBUS_VALUE_MEDIAN;    // yaw
                 if (abs(dval_yaw) < SBUS_VALUE_IGNORE)
                     dval_yaw = 0;
                 
@@ -776,9 +780,9 @@ void pantilt_resolving_entry(void* parameter)
                 if (env->ptz_mode == PANTILT_MODE_HEADFREE)
 					ctrlpkt.mode = 0x0000;
 				else if (env->ptz_mode == PANTILT_MODE_HEADLOCK)
-					ctrlpkt.mode = 0x6400;               
+					ctrlpkt.mode = 0x6400;
 				else if (env->ptz_mode == PANTILT_MODE_HEADDOWN)
-					ctrlpkt.mode = 0x9BFE;             
+					ctrlpkt.mode = 0x9BFE;
                 
                 pantilt_update_checksum(&ctrlpkt);
                    

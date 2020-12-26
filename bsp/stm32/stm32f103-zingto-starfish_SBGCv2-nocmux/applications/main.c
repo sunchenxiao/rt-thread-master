@@ -17,11 +17,11 @@
 
 #define LED_PIN         GET_PIN(A, 15)
 
-#define RXBUFF_SIZE         (128 + 32)
-#define MAIL_SIZE           (128 + 32)
+#define RXBUFF_SIZE         (256 + 32)
+#define MAIL_SIZE           (256 + 32)
 #define THREAD_STACK_SIZE   (1024)
 #define THREAD_STACK_SIZE2  (1024)
-#define MIN_RX_INTERVAL     (5)         // 5ms timeout
+#define MIN_RX_INTERVAL     (20)         // 5ms timeout
 
 #define PKT_HEADER          (0x3E)
 
@@ -202,7 +202,7 @@ static void uart2_rx_entry(void* parameter)
         if (result != -RT_ETIMEOUT) {
             
             szBGC += rt_device_read(pUart2, 0, pBGC + szBGC, 1);
-            
+			
             if (isSBGC == RT_FALSE) {
                 RT_ASSERT(szBuf < RXBUFF_SIZE);
                 pBuf[szBuf++] = pBGC[szBGC - 1];
@@ -238,7 +238,7 @@ static void uart2_rx_entry(void* parameter)
             // semaphore timeout.
             // if buffer isn't empty, then send the data and clear the buffer.
             if (szBuf == 0)
-                continue;
+                continue;		
             
             if (szBuf == 5) {
                 if ( ( pBuf[0] == 0xE1) && (pBuf[1] == 0x1E) && (pBuf[2] == 0x12) && (pBuf[3] == 0xF1) && (pBuf[4] == 0x1F) ) {
@@ -295,6 +295,7 @@ static void uart2_rx_entry(void* parameter)
         }
         
         if (isSBGC == RT_TRUE) {
+			
             // if recvive unfinish, then contiune.
             if (szBGC != pBGC[PAYLOAD_SIZE_OFFSET] + 5 ) {
                 if (szBGC > RXBUFF_SIZE)
@@ -539,7 +540,7 @@ static void uart3_rx_entry(void* parameter)
         pMail->size = szbuf;
         rt_memcpy(&pMail->payload[0], pbuf, szbuf);
 
-        result = rt_mb_send(mbUart1Tx, (rt_ubase_t)pMail);
+        result = rt_mb_send(mbUart2Tx, (rt_ubase_t)pMail);
         
         if (RT_EOK != result)
         {

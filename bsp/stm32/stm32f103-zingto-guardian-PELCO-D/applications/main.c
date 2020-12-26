@@ -50,6 +50,7 @@ int main(void)
     for (int i = 0; i < SBUS_CHANNEL_NUMBER; i++)
     {
         env.ch_value[i] = SBUS_VALUE_MEDIAN;
+		env.ch_value_uart[i] = SBUS_VALUE_MEDIAN;
         env.ch_status[i] = SBUS_IDLE;
     }
     
@@ -73,21 +74,21 @@ int main(void)
     result = rt_thread_startup(pthread);
     RT_ASSERT(result == RT_EOK);
     
-    if (rt_pin_read(MODE_PIN))
-    {
+    //if (rt_pin_read(MODE_PIN))
+    //{
         pthread = rt_thread_create("tSBus", sbus_resolving_entry, &env, 2048, 8, 20);
         RT_ASSERT(pthread != RT_NULL);
         result = rt_thread_startup(pthread);
         RT_ASSERT(result == RT_EOK);
 		rt_pin_write(LED_SBUS_PIN, PIN_LOW);
-    }
-    else
-    {
+    //}
+    //else
+    //{
         pthread = rt_thread_create("tZINGTO", zingto_resolving_entry, &env, 2048, 10, 20);
         RT_ASSERT(pthread != RT_NULL);
         result = rt_thread_startup(pthread);
         RT_ASSERT(result == RT_EOK);
-    }
+    //}
 	pthread = rt_thread_create("tAsk", ask_resolving_entry, &env, 2048, 10, 20);
     RT_ASSERT(pthread != RT_NULL);
     result = rt_thread_startup(pthread);

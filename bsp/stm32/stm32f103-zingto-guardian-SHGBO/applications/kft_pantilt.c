@@ -40,7 +40,7 @@ typedef struct __PTZ_SendPacket
 }ptz_serialctrlpkt;
 #pragma pack(4)
 
-//30倍双光
+//30???
 const float ZOOM2RATIO[30] = {  1.0f,   0.6f,   0.5f,   0.4f,   0.35f,   0.3f,
                                 0.3f,   0.3f,   0.3f,   0.25f,  0.25f,  0.25f,
                                 0.2f,   0.2f,   0.2f,   0.15f,  0.15f,  0.15f,
@@ -57,11 +57,15 @@ rt_uint8_t laser_a5[1] = {0xA5};
 
 rt_uint8_t laser_dis[6] = {0xEE, 0x16, 0x02, 0x03, 0x02, 0x05};
 
-rt_uint8_t send_data[6]={0x00,0x00,0x00,0x00,0x00,0x00};
+rt_uint8_t laser1_dis[8] = {0xAE, 0xA7, 0x04, 0x00, 0x05, 0x09, 0xBC, 0xBE};
+
+rt_uint8_t send_data[9]={0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
 
 #define PTZ_ASK_PKT_SIZE (5)  
 
 rt_uint8_t ptz_askctrlpkt[PTZ_ASK_PKT_SIZE] = {0xE1,0x1E,0x12,0xF1,0x1F};
+
+rt_uint8_t ptz_askctrlpkt_jiguang[PTZ_ASK_PKT_SIZE] = {0xF1,0x1F,0x12,0xF1,0x1F};
 
 #define IRSENSOR_ZOOM_PKT_SIZE  (16)
 
@@ -100,18 +104,20 @@ rt_uint8_t calib_protcol[4][PANTILT_CALIB_PKT_SIZE] = {
 #define IRSENSOR_COLOR_PKT_HEADER   (0x05AA)
 #define IRSENSOR_ZOOM_PKT_HEADER    (0x0CAA)
 #define PANTILT_CALIB_PKT_HEADER    (0x1EE1)
-#define PTZ_ASK_PKT_HEADER    		(0x1EE1)
+#define PTZ_ASK_PKT_HEADER    		(0x1FF1)
 
 #define PANTILT_VALUE_MAXIMUM   	(500)
 #define PANTILT_VALUE_MININUM   	(-500)
 
-//30倍双光
+//30???
 #define PANTILT_VALUE_RATIO     	(0.7142857f)
 
 #define ANSWER_PKT_HEADER0			(0x3E)
 #define ANSWER_PKT_SIZE0			(129)
 #define ANSWER_PKT_HEADER1			(0xEE)
 #define ANSWER_PKT_SIZE1			(10)
+#define ANSWER_PKT_HEADER2			(0xAE)
+#define ANSWER_PKT_HEADER3			(0xA7)
 
 /* defined the LED pin: PA0 */
 #define LED_PIN    GET_PIN(A, 0)
@@ -144,7 +150,7 @@ static void pantilt_data_send_entry(void* parameter)
     rt_ubase_t mail;
     rt_uint8_t* pbuf;
     rt_device_t dev = RT_NULL;
-	rt_device_t dev5 = RT_NULL;
+	rt_device_t dev1 = RT_NULL;
     rt_uint32_t ubase32 = 0;
     rt_uint16_t ubase16 = 0;
     
@@ -154,8 +160,8 @@ static void pantilt_data_send_entry(void* parameter)
     dev = rt_device_find(PANTILT_UARTPORT_NAME);
     RT_ASSERT(dev != RT_NULL);
 	
-	dev5 = rt_device_find("uart5");
-    RT_ASSERT(dev5 != RT_NULL);
+	dev1 = rt_device_find("uart1");
+    RT_ASSERT(dev1 != RT_NULL);
     
     LOG_I("send sub-thread, start!");
     
@@ -178,20 +184,26 @@ static void pantilt_data_send_entry(void* parameter)
         else if(ubase16 == IRSENSOR_COLOR_PKT_HEADER)
         {
             LOG_D("send to irsensor color");
-            rt_device_write(dev5, 0, pbuf, IRSENSOR_COLOR_PKT_SIZE);
+            rt_device_write(dev1, 0, pbuf, IRSENSOR_COLOR_PKT_SIZE);
         }
         else if(ubase16 == IRSENSOR_ZOOM_PKT_HEADER)
         {
             LOG_D("send to irsensor zoom");
-            rt_device_write(dev5, 0, pbuf, IRSENSOR_ZOOM_PKT_SIZE);
+            rt_device_write(dev1, 0, pbuf, IRSENSOR_ZOOM_PKT_SIZE);
         }
 		else if(ubase16 == PTZ_ASK_PKT_HEADER)
         { 
-            rt_device_write(dev, 0, pbuf, PTZ_ASK_PKT_SIZE);
+			//Erboli jiguangqi
+            rt_device_write(dev, 0, ptz_askctrlpkt, PTZ_ASK_PKT_SIZE);
 			rt_thread_mdelay(20);
 			rt_device_write(dev, 0, laser_a5, 1);
 			rt_thread_mdelay(20);
 			rt_device_write(dev, 0, laser_dis, 6);
+			
+			//laokuan jiguangqi
+//			rt_device_write(dev, 0, ptz_askctrlpkt, PTZ_ASK_PKT_SIZE);
+//			rt_thread_mdelay(30);
+//			rt_device_write(dev, 0, laser1_dis, 8);
         }
         else if(ubase16 == PANTILT_CALIB_PKT_HEADER)
         {
@@ -223,7 +235,7 @@ static void pantilt_data_recv_entry(void* parameter)
     dev = rt_device_find(PANTILT_UARTPORT_NAME);
     RT_ASSERT(dev != RT_NULL);
     
-	dev5 = rt_device_find("uart1");
+	dev5 = rt_device_find("uart5");
     LOG_I("recv sub-thread, start!");
  
     while (1)
@@ -246,6 +258,9 @@ static void pantilt_data_recv_entry(void* parameter)
 			send_data[3]=pbuf[70];
 			send_data[4]=pbuf[71];
 			send_data[5]=pbuf[72];
+			send_data[6]=0;
+			send_data[7]=0;
+			send_data[8]=env->cam_zoom_pos+1;
 			
 			rt_int16_t  temp = 0;
 			temp = *(rt_int16_t*)&pbuf[71];
@@ -267,81 +282,32 @@ static void pantilt_data_recv_entry(void* parameter)
 			
 			LOG_D("PTZ: %d %d", *(rt_int16_t*)&pbuf[69], *(rt_int16_t*)&pbuf[71]);
 			
-			// notice the tracker thread to show.
-			env->trck_action = TRACK_ACTION_ZOOM_SHOW;
-			rt_sem_release(env->sh_track);
+			if(env->send_flag==0)
+			{
+				rt_device_write(dev5, 0, send_data, 9);
+			}
 		}
+		//Erboli jiguangqi
 		else if(pbuf[0] == ANSWER_PKT_HEADER1 && szbuf == ANSWER_PKT_SIZE1)
 		{
 			send_data[0]=pbuf[7];
 			send_data[1]=pbuf[6];
-			rt_device_write(dev5, 0, send_data, 6);
+			rt_device_write(dev5, 0, send_data, 9);
 		}
+		//laokuan jiguangqi
+//		else if(pbuf[0] == ANSWER_PKT_HEADER2 && pbuf[1] == ANSWER_PKT_HEADER3 && szbuf > 8)
+//		{
+//			send_data[0]=pbuf[8];
+//			send_data[1]=pbuf[7];
+//			rt_device_write(dev5, 0, send_data, 9);
+//		}
 		else
 		{
 			
 		}
 		
-		
 		szbuf = 0;
 		
-		
-		
-		
-		//激光数据
-        /*result = rt_sem_take(semaph, 50);
-        
-        if(result == -RT_ETIMEOUT)
-            continue;
-        
-        switch (szbuf){
-        case 0:
-        case 1:
-            szbuf += rt_device_read(dev, 0, pbuf + szbuf, 1);
-            //if (pbuf[0] != ANSWER_PKT_HEADER1)
-                //szbuf = 0;
-            break;
-        default:
-            szbuf += rt_device_read(dev, 0, pbuf + szbuf, ANSWER_PKT_SIZE1 - szbuf);
-            break;
-        }
-		if (szbuf != ANSWER_PKT_SIZE1)
-            continue;
-        
-        szbuf = 0;
-        
-		rt_device_write(dev5, 0, pbuf, ANSWER_PKT_SIZE1);*/
-				
-				
-		//原版数据
-		/*result = rt_sem_take(semaph, RT_WAITING_FOREVER);
-        
-        if(result == -RT_ETIMEOUT)
-            continue;
-        
-        switch (szbuf){
-        case 0:
-        case 1:
-            szbuf += rt_device_read(dev, 0, pbuf + szbuf, 1);
-            if (pbuf[0] != ANSWER_PKT_HEADER0)
-                szbuf = 0;
-            break;
-        default:
-            szbuf += rt_device_read(dev, 0, pbuf + szbuf, ANSWER_PKT_SIZE - szbuf);
-            break;
-        }
-				if (szbuf != ANSWER_PKT_SIZE)
-            continue;
-        
-        szbuf = 0;
-				
-        //yaw 71 72     pitch 69 70
-		rt_uint8_t send_data[6]={0x00,0x00,0x00,0x00,0x00,0x00};
-		send_data[2]=pbuf[69];
-		send_data[3]=pbuf[70];
-		send_data[4]=pbuf[71];
-		send_data[5]=pbuf[72];
-		rt_device_write(dev1, 0, send_data, 6);*/
     }
 }
 
@@ -397,9 +363,10 @@ void pantilt_resolving_entry(void* parameter)
 		//location
 		if (env->ptz_action == PANTILT_ACTION_ASK)
 		{
+			env->ask_laser_distance=1;
 			env->ptz_action = PANTILT_ACTION_NULL;
 			pbuf = rt_mp_alloc(mempool, RT_WAITING_FOREVER);
-			rt_memcpy(pbuf, ptz_askctrlpkt, PTZ_ASK_PKT_SIZE);
+			rt_memcpy(pbuf, ptz_askctrlpkt_jiguang, PTZ_ASK_PKT_SIZE);
 			rt_mb_send(mailbox, (rt_ubase_t)pbuf);
 			continue;			
 		}
@@ -586,24 +553,24 @@ void pantilt_resolving_entry(void* parameter)
                             dval_roll = PANTILT_VALUE_MAXIMUM;
                     }
                     
-                    dval_pitch = env->ch_value[6] - SBUS_VALUE_MEDIAN;    // pitch
+                    dval_pitch = env->ch_value[1] - SBUS_VALUE_MEDIAN;    // pitch
                     if (abs(dval_pitch) < SBUS_VALUE_IGNORE)
                         dval_pitch = 0;
                    
-                    dval_yaw = env->ch_value[8] - SBUS_VALUE_MEDIAN;    // yaw
+                    dval_yaw = env->ch_value[3] - SBUS_VALUE_MEDIAN;    // yaw
                     if (abs(dval_yaw) < SBUS_VALUE_IGNORE)
                         dval_yaw = 0;
                     
                     switch(env->cam_pip_mode)
                     {
-                        case 1:
-                        case 3:
+                        case 0:
+                        case 2:
                         default:
                             ctrlpkt.pitch   = dval_pitch * ZOOM2RATIO[env->cam_zoom_pos];
                             ctrlpkt.yaw     = dval_yaw * ZOOM2RATIO[env->cam_zoom_pos];
                             break;
-                        case 2:
-                        case 4:
+                        case 1:
+                        case 3:
                             ctrlpkt.pitch   = dval_pitch * IR2RATIO;
                             ctrlpkt.yaw     = dval_yaw * IR2RATIO;
                             break;
@@ -672,14 +639,14 @@ void pantilt_resolving_entry(void* parameter)
                     
                     switch(env->cam_pip_mode)
                     {
-                        case 1:
-                        case 3:
+                        case 0:
+                        case 2:
                         default:
                             ctrlpkt.pitch   = dval_pitch * ZOOM2RATIO[env->cam_zoom_pos];
                             ctrlpkt.yaw     = dval_yaw * ZOOM2RATIO[env->cam_zoom_pos];
                             break;
-                        case 2:
-                        case 4:
+                        case 1:
+                        case 3:
                             ctrlpkt.pitch   = dval_pitch * IR2RATIO;
                             ctrlpkt.yaw     = dval_yaw * IR2RATIO;
                             break;
@@ -715,15 +682,18 @@ void ask_resolving_entry(void* parameter)
 	
 	while(RT_TRUE)
 	{
-		rt_uint8_t *pbuf = RT_NULL;
+		if(env->ask_laser_distance==0)
+		{
+			rt_uint8_t *pbuf = RT_NULL;
+			pbuf = rt_mp_alloc(mempool, RT_WAITING_FOREVER);
+			rt_memcpy(pbuf, ptz_askctrlpkt, PTZ_ASK_PKT_SIZE);
+			rt_mb_send(mailbox, (rt_ubase_t)pbuf);
+			rt_event_send(env->ev_camera, CAMERA_CMD_ZOOM_GETPOS);
+		}else{
+			env->ask_laser_distance=0;
+		}
 		
-		pbuf = rt_mp_alloc(mempool, RT_WAITING_FOREVER);
-		rt_memcpy(pbuf, ptz_askctrlpkt, PTZ_ASK_PKT_SIZE);
-		rt_mb_send(mailbox, (rt_ubase_t)pbuf);
-		
-		rt_event_send(env->ev_camera, CAMERA_CMD_ZOOM_GETPOS);
-		
-		rt_thread_mdelay(500);
+		rt_thread_mdelay(1000);
 	}
 }
 

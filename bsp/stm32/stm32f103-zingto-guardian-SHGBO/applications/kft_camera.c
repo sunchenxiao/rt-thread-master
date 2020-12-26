@@ -29,7 +29,7 @@ const char XUANZHAN_LOGO_RECORD_OFF[] = "<?xml version=\"1.0\" encoding=\"GB2312
 const char XUANZHAN_LOGO_SNAP_ON[] = "<?xml version=\"1.0\" encoding=\"GB2312\" ?><icon name=\"photo_l\"  posx=\"10\" posy=\"10\" cmd=\"show\" ></icon>\r\n";
 const char XUANZHAN_LOGO_SNAP_OFF[] = "<?xml version=\"1.0\" encoding=\"GB2312\" ?><icon name=\"photo_l\"  posx=\"10\" posy=\"10\" cmd=\"hide\" ></icon>\r\n";
 
-#define CAMERA_UARTPORT_NAME "uart5"
+#define CAMERA_UARTPORT_NAME "uart1"
 #define CAMERA_SEMAPHORE_NAME "shCAM"
 #define CAMERA_EVENT_NAME "evCAM"
 
@@ -40,6 +40,9 @@ const char XUANZHAN_LOGO_SNAP_OFF[] = "<?xml version=\"1.0\" encoding=\"GB2312\"
 #define VISCA_SET_ZOOMPOS_CMD_SIZE      (9)
 #define VISCA_GET_ZOOMPOS_ACK_SIZE      (7)
 
+const rt_uint8_t CAMERA_VISCA_RECORD_ON[] = {0x81, 0x01, 0x05, 0x01, 0x00, 0xFF};
+const rt_uint8_t CAMERA_VISCA_RECORD_OFF[] = {0x81, 0x01, 0x05, 0x01, 0x01, 0xFF};
+const rt_uint8_t CAMERA_VISCA_CAPTURE[] = {0x81, 0x01, 0x05, 0x00, 0x00, 0xFF};
 
 rt_uint8_t VISCA_ZOOM_IN[]        = {0x81, 0x01, 0x04, 0x07, 0x20, 0xFF};
 rt_uint8_t VISCA_ZOOM_OUT[]       = {0x81, 0x01, 0x04, 0x07, 0x30, 0xFF};
@@ -166,36 +169,66 @@ void camera_resolving_entry(void* parameter)
         
         switch(opcode & ~CAMERA_CMD_ZOOM_GETPOS) {
             case CAMERA_CMD_CAPTURE:
-                #ifdef USE_HU_CAMERA
-                    uart_send_with_block(dev, (void *)CAMERA_VISCA_CAPTURE, sizeof(CAMERA_VISCA_CAPTURE));
-                    LOG_D("VISCA_CMD_CAPTURE");
-                #else
-                    uart_clean_recv_buff(dev, pbuf);     
-                    uart_send_with_block(dev, HI3521D_CMD_CAPTURE, sizeof(HI3521D_CMD_CAPTURE));
-                    LOG_D("HI3521D_CMD_CAPTURE");
-                    uart_send_with_block(dev, HI3521D_CMD_CAPTURE, sizeof(HI3521D_CMD_CAPTURE));
-                    LOG_D("HI3521D_CMD_CAPTURE");
-                #endif
+               
+				uart_send_with_block(dev, (void *)CAMERA_VISCA_CAPTURE, sizeof(CAMERA_VISCA_CAPTURE));
+				LOG_D("VISCA_CMD_CAPTURE");
+   
+				/*uart_clean_recv_buff(dev, pbuf);     
+				uart_send_with_block(dev, HI3521D_CMD_CAPTURE, sizeof(HI3521D_CMD_CAPTURE));
+				LOG_D("HI3521D_CMD_CAPTURE");
+				uart_send_with_block(dev, HI3521D_CMD_CAPTURE, sizeof(HI3521D_CMD_CAPTURE));
+				LOG_D("HI3521D_CMD_CAPTURE");
+			
+				rt_memset(pbuf, 0x00, CAMERA_BUFFER_SIZE);
+				result = uart_recv_with_timeout(dev, pbuf, sizeof(HI3521D_ACK_CAPTURE));
+
+				if (result != RT_EOK)
+					LOG_W("timeout!");
+				else if (rt_strncmp(HI3521D_ACK_CAPTURE, (void*)pbuf, sizeof(HI3521D_ACK_CAPTURE) - 2))
+					LOG_W("invailed!, %-16s", pbuf);
+				else
+					LOG_D("OK");*/
+         
                 break;
             case CAMERA_CMD_RECORD_ON:
-                #ifdef USE_HU_CAMERA
-                    uart_send_with_block(dev, (void *)CAMERA_VISCA_RECORD_ON, sizeof(CAMERA_VISCA_RECORD_ON));
-                    LOG_D("VISCA_CMD_CAPTURE");
-                #else                
-                    uart_clean_recv_buff(dev, pbuf);
-                    uart_send_with_block(dev, HI3521D_CMD_RECORD_ON, sizeof(HI3521D_CMD_RECORD_ON));
-                    LOG_D("HI3521D_CMD_RECORD_ON");
-                #endif
+                
+				uart_send_with_block(dev, (void *)CAMERA_VISCA_RECORD_ON, sizeof(CAMERA_VISCA_RECORD_ON));
+				LOG_D("VISCA_CMD_CAPTURE");
+		  
+				/*uart_clean_recv_buff(dev, pbuf);
+				uart_send_with_block(dev, HI3521D_CMD_RECORD_ON, sizeof(HI3521D_CMD_RECORD_ON));
+				LOG_D("HI3521D_CMD_RECORD_ON");
+		
+				rt_memset(pbuf, 0x00, CAMERA_BUFFER_SIZE);
+				result = uart_recv_with_timeout(dev, pbuf, sizeof(HI3521D_ACK_RECORD));
+			
+				if (result != RT_EOK)
+					LOG_W("timeout!");
+				else if (rt_strncmp(HI3521D_ACK_RECORD, (void*)pbuf, sizeof(HI3521D_ACK_RECORD) - 2))
+					LOG_W("invailed!, %-16s", pbuf);
+				else
+					LOG_D("OK");*/
+              
                 break;
             case CAMERA_CMD_RECORD_OFF:
-                #ifdef USE_HU_CAMERA
-                    uart_send_with_block(dev, (void *)CAMERA_VISCA_RECORD_OFF, sizeof(CAMERA_VISCA_RECORD_OFF));
-                    LOG_D("VISCA_CMD_CAPTURE");
-                #else 
-                    uart_clean_recv_buff(dev, pbuf);
-                    uart_send_with_block(dev, HI3521D_CMD_RECORD_OFF, sizeof(HI3521D_CMD_RECORD_OFF));
-                    LOG_D("HI3521D_CMD_RECORD_OFF");
-                #endif
+
+				uart_send_with_block(dev, (void *)CAMERA_VISCA_RECORD_OFF, sizeof(CAMERA_VISCA_RECORD_OFF));
+				LOG_D("VISCA_CMD_CAPTURE");
+	
+				/*uart_clean_recv_buff(dev, pbuf);
+				uart_send_with_block(dev, HI3521D_CMD_RECORD_OFF, sizeof(HI3521D_CMD_RECORD_OFF));
+				LOG_D("HI3521D_CMD_RECORD_OFF");
+			
+				rt_memset(pbuf, 0x00, CAMERA_BUFFER_SIZE);
+				result = uart_recv_with_timeout(dev, pbuf, sizeof(HI3521D_ACK_RECORD));
+			
+				if (result != RT_EOK)
+					LOG_W("timeout!");
+				else if (rt_strncmp(HI3521D_ACK_RECORD, (void*)pbuf, sizeof(HI3521D_ACK_RECORD) - 2))
+					LOG_W("invailed!, %-16s", pbuf);
+				else
+					LOG_D("OK");*/
+        
                 break;
             case CAMERA_CMD_PIP_MODE1:
                 uart_clean_recv_buff(dev, pbuf);

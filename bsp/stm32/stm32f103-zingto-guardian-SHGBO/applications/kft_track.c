@@ -21,7 +21,7 @@
 #define DBG_COLOR
 #include <rtdbg.h>
 
-#define TRACK_UARTPORT_NAME "uart5"
+#define TRACK_UARTPORT_NAME "uart1"
 #define TRACK_SEMAPHORE_NAME "shTRCK"
 #define TRACK_SEMAPHORE_RX_NAME "shTRCKrx"
 
@@ -339,13 +339,18 @@ static void track_data_recv_entry(void* parameter)
 				}
 			}
 			
-			if (nZoom == 41) 
+			if (nZoom > 29) 
 			{
-				nZoom = 40;
+				nZoom = 29;
 			}
 			
 			env->cam_zoom_pos = nZoom;
 			rt_kprintf("env->cam_zoom_pos  %d \n",env->cam_zoom_pos);
+			
+			// notice the tracker thread to show.
+			env->trck_action = TRACK_ACTION_ZOOM_SHOW;
+			rt_sem_release(env->sh_track);
+			
 			env->cam_getpos_tick = rt_tick_get();
 		}
 		else
@@ -430,14 +435,14 @@ void track_resolving_entry(void* parameter)
 			ctrlpkt.set_fuction = 0x30;
             
             float  zoomf32 = 0.f;
-            if (env->cam_zoom_pos < 10)
+            if (env->cam_zoom_pos < 30)
                 zoomf32 = env->cam_zoom_pos + 1;                    // Optical ZOOM.
             else             
-                zoomf32 = 10;     // Optical ZOOM 30X combine Digital ZOOM.
+                zoomf32 = 30;     // Optical ZOOM 30X combine Digital ZOOM.
             
 			rt_memcpy(ctrlpkt.__reserved8 + 4, &zoomf32, 4);
             rt_memcpy(&ctrlpkt.set_ircolor, &env->ptz_yaw, sizeof(float));
-			rt_memcpy(ctrlpkt.__reserved8, &env->ptz_pitch, sizeof(float));           
+			rt_memcpy(ctrlpkt.__reserved8, &env->ptz_pitch, sizeof(float));		
         }
         else if (env->trck_action == TRACK_ACTION_PREPARE)
         {
@@ -469,6 +474,57 @@ void track_resolving_entry(void* parameter)
             
             env->trck_prepare = RT_FALSE;
             env->trck_incharge = RT_FALSE;
+        }
+		else if (env->trck_action == TRACK_ACTION_POINT_START)
+        {
+			ctrlpkt.set_mode = 0x26;
+			env->trck_prepare = RT_FALSE;
+            env->trck_incharge = RT_FALSE;
+			pbuf = (rt_uint8_t*)&ctrlpkt;
+			for(int i = 0; i < pktsz - 1; i++)
+				ctrlpkt.checksum += *(pbuf + i);      
+			pbuf = rt_mp_alloc(mempool, RT_WAITING_FOREVER);
+			rt_memcpy(pbuf, &ctrlpkt, pktsz);
+			rt_mb_send(mailbox, (rt_ubase_t)pbuf);
+			
+			rt_thread_mdelay(100);
+			
+			rt_memset(&ctrlpkt, 0x00, pktsz);
+			ctrlpkt.HEADER = 0x7E7E;
+			ctrlpkt.ADDR = 0x44;
+			ctrlpkt.set_mode = 0x71;
+            ctrlpkt.set_fuction = 0xFF;
+			ctrlpkt.set_offset_x=env->trck_offset_x;
+			ctrlpkt.set_offset_y=env->trck_offset_y;            
+            env->trck_prepare = RT_TRUE;
+			pbuf = (rt_uint8_t*)&ctrlpkt;
+			for(int i = 0; i < pktsz - 1; i++)
+				ctrlpkt.checksum += *(pbuf + i);      
+			pbuf = rt_mp_alloc(mempool, RT_WAITING_FOREVER);
+			rt_memcpy(pbuf, &ctrlpkt, pktsz);
+			rt_mb_send(mailbox, (rt_ubase_t)pbuf);
+			
+			rt_thread_mdelay(100);
+			
+			rt_memset(&ctrlpkt, 0x00, pktsz);
+			ctrlpkt.HEADER = 0x7E7E;
+			ctrlpkt.ADDR = 0x44;
+			ctrlpkt.set_mode = 0x71;			// 0x71 Trace Mode.
+			ctrlpkt.set_fuction = 0xFE;
+			ctrlpkt.start_trace = 0x01;			// 0: OFF; 1: ON.
+			ctrlpkt.__reserved3 = 0x01;
+			ctrlpkt.set_trace_mode = 0x3C;		// medium size trace window.   // 0x3C: S,M,L     0x38: M,L    0x2C: S,M          
+            env->trck_prepare = RT_FALSE;
+            env->trck_incharge = RT_TRUE;
+			pbuf = (rt_uint8_t*)&ctrlpkt;
+			for(int i = 0; i < pktsz - 1; i++)
+				ctrlpkt.checksum += *(pbuf + i);      
+			pbuf = rt_mp_alloc(mempool, RT_WAITING_FOREVER);
+			rt_memcpy(pbuf, &ctrlpkt, pktsz);
+			rt_mb_send(mailbox, (rt_ubase_t)pbuf);
+        
+			env->trck_action = TRACK_ACTION_NULL;
+			continue;
         }
         else if (env->trck_action == TRACK_ACTION_RECORD_ON)
         {

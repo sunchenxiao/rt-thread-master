@@ -100,33 +100,33 @@ void zingto_resolving_entry(void* parameter)
 		
 		if(pbuf[2]==0x00&&pbuf[3]==0x00) //stop	
 		{
-			env->ch_value[0] = SBUS_VALUE_MEDIAN;
-            env->ch_value[1] = SBUS_VALUE_MEDIAN;
-            env->ch_value[3] = SBUS_VALUE_MEDIAN;
+			env->ch_value_uart[0] = SBUS_VALUE_MEDIAN;
+            env->ch_value_uart[1] = SBUS_VALUE_MEDIAN;
+            env->ch_value_uart[3] = SBUS_VALUE_MEDIAN;
 			env->ptz_action = PANTILT_ACTION_NULL;			
 			ptz_request = RT_TRUE;
 		}
 		else if(pbuf[2]==0x00&&pbuf[3]==0x10) //pitch up
 		{
-			env->ch_value[1] = SBUS_VALUE_MEDIAN + (SBUS_VALUE_MAXIMUM - SBUS_VALUE_MEDIAN) * pbuf[5] / 200.f;
+			env->ch_value_uart[1] = SBUS_VALUE_MEDIAN + (SBUS_VALUE_MAXIMUM - SBUS_VALUE_MEDIAN) * pbuf[5] / 200.f;
 			env->ptz_action = PANTILT_ACTION_NULL;
 			ptz_request = RT_TRUE;
 		}
 		else if(pbuf[2]==0x00&&pbuf[3]==0x08) //pitch down
 		{
-			env->ch_value[1] = SBUS_VALUE_MEDIAN + (SBUS_VALUE_MININUM - SBUS_VALUE_MEDIAN) * pbuf[5] / 200.f;
+			env->ch_value_uart[1] = SBUS_VALUE_MEDIAN + (SBUS_VALUE_MININUM - SBUS_VALUE_MEDIAN) * pbuf[5] / 200.f;
 			env->ptz_action = PANTILT_ACTION_NULL;
 			ptz_request = RT_TRUE;
 		}
 		else if(pbuf[2]==0x00&&pbuf[3]==0x02) //yaw left
 		{
-			env->ch_value[3] = SBUS_VALUE_MEDIAN + (SBUS_VALUE_MAXIMUM - SBUS_VALUE_MEDIAN) * pbuf[4] / 200.f;
+			env->ch_value_uart[3] = SBUS_VALUE_MEDIAN + (SBUS_VALUE_MAXIMUM - SBUS_VALUE_MEDIAN) * pbuf[4] / 200.f;
 			env->ptz_action = PANTILT_ACTION_NULL;
 			ptz_request = RT_TRUE;
 		}
 		else if(pbuf[2]==0x00&&pbuf[3]==0x04) //yaw right
 		{
-			env->ch_value[3] = SBUS_VALUE_MEDIAN + (SBUS_VALUE_MININUM - SBUS_VALUE_MEDIAN) * pbuf[4] / 200.f;
+			env->ch_value_uart[3] = SBUS_VALUE_MEDIAN + (SBUS_VALUE_MININUM - SBUS_VALUE_MEDIAN) * pbuf[4] / 200.f;
 			env->ptz_action = PANTILT_ACTION_NULL;
 			ptz_request = RT_TRUE;
 		}
@@ -247,6 +247,12 @@ void zingto_resolving_entry(void* parameter)
 		else if(pbuf[2]==0x16&&pbuf[3]==0x00) //location
 		{
 			env->ptz_action = PANTILT_ACTION_ASK;
+            ptz_request = RT_TRUE;  
+		}
+		else if(pbuf[2]==0x17&&pbuf[3]==0x00) //ir_zoom
+		{
+			env->ptz_action = PANTILT_ACTION_IRZOOM;
+			env->irs_zoom = pbuf[4];
             ptz_request = RT_TRUE;  
 		}
 		else

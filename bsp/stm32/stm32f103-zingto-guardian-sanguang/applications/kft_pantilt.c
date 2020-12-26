@@ -229,7 +229,7 @@ static void pantilt_data_recv_entry(void* parameter)
     while (1)
     {
 		//激光数据
-        /*result = rt_sem_take(semaph, 50);
+        result = rt_sem_take(semaph, 50);
         
         if(result == -RT_ETIMEOUT)
             continue;
@@ -250,11 +250,11 @@ static void pantilt_data_recv_entry(void* parameter)
         
         szbuf = 0;
         
-		rt_device_write(dev5, 0, pbuf, ANSWER_PKT_SIZE1);*/
+		rt_device_write(dev5, 0, pbuf, ANSWER_PKT_SIZE1);
 				
 				
 		//原版数据
-		result = rt_sem_take(semaph, RT_WAITING_FOREVER);
+		/*result = rt_sem_take(semaph, RT_WAITING_FOREVER);
         
         if(result == -RT_ETIMEOUT)
             continue;
@@ -281,7 +281,7 @@ static void pantilt_data_recv_entry(void* parameter)
 		send_data[3]=pbuf[70];
 		send_data[4]=pbuf[71];
 		send_data[5]=pbuf[72];
-		rt_device_write(dev5, 0, send_data, 6);
+		rt_device_write(dev5, 0, send_data, 6);*/
     }
 }
 
@@ -334,14 +334,15 @@ void pantilt_resolving_entry(void* parameter)
     {
         result = rt_sem_take(env->sh_ptz, RT_WAITING_FOREVER);
 
-						//location
-						if (env->ptz_action == PANTILT_ACTION_ASK)
-            {
-								env->ptz_action = PANTILT_ACTION_NULL;
-								pbuf = rt_mp_alloc(mempool, RT_WAITING_FOREVER);
-								rt_memcpy(pbuf, ptz_askctrlpkt, PTZ_ASK_PKT_SIZE);
-								rt_mb_send(mailbox, (rt_ubase_t)pbuf);           
-            }
+		//location
+		if (env->ptz_action == PANTILT_ACTION_ASK)
+		{
+			env->ptz_action = PANTILT_ACTION_NULL;
+			pbuf = rt_mp_alloc(mempool, RT_WAITING_FOREVER);
+			rt_memcpy(pbuf, ptz_askctrlpkt, PTZ_ASK_PKT_SIZE);
+			rt_mb_send(mailbox, (rt_ubase_t)pbuf);
+			continue;
+		}
 
         if (env->trck_incharge)
         {						
