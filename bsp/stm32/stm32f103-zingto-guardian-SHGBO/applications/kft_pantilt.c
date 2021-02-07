@@ -194,16 +194,16 @@ static void pantilt_data_send_entry(void* parameter)
 		else if(ubase16 == PTZ_ASK_PKT_HEADER)
         { 
 			//Erboli jiguangqi
-            rt_device_write(dev, 0, ptz_askctrlpkt, PTZ_ASK_PKT_SIZE);
-			rt_thread_mdelay(20);
-			rt_device_write(dev, 0, laser_a5, 1);
-			rt_thread_mdelay(20);
-			rt_device_write(dev, 0, laser_dis, 6);
+//            rt_device_write(dev, 0, ptz_askctrlpkt, PTZ_ASK_PKT_SIZE);
+//			rt_thread_mdelay(20);
+//			rt_device_write(dev, 0, laser_a5, 1);
+//			rt_thread_mdelay(20);
+//			rt_device_write(dev, 0, laser_dis, 6);
 			
 			//laokuan jiguangqi
-//			rt_device_write(dev, 0, ptz_askctrlpkt, PTZ_ASK_PKT_SIZE);
-//			rt_thread_mdelay(30);
-//			rt_device_write(dev, 0, laser1_dis, 8);
+			rt_device_write(dev, 0, ptz_askctrlpkt, PTZ_ASK_PKT_SIZE);
+			rt_thread_mdelay(30);
+			rt_device_write(dev, 0, laser1_dis, 8);
         }
         else if(ubase16 == PANTILT_CALIB_PKT_HEADER)
         {
@@ -282,25 +282,30 @@ static void pantilt_data_recv_entry(void* parameter)
 			
 			LOG_D("PTZ: %d %d", *(rt_int16_t*)&pbuf[69], *(rt_int16_t*)&pbuf[71]);
 			
-			if(env->send_flag==0)
-			{
-				rt_device_write(dev5, 0, send_data, 9);
-			}
+//			if(env->send_flag==0)
+//			{
+//				rt_device_write(dev5, 0, send_data, 9);
+//			}
 		}
 		//Erboli jiguangqi
-		else if(pbuf[0] == ANSWER_PKT_HEADER1 && szbuf == ANSWER_PKT_SIZE1)
-		{
-			send_data[0]=pbuf[7];
-			send_data[1]=pbuf[6];
-			rt_device_write(dev5, 0, send_data, 9);
-		}
-		//laokuan jiguangqi
-//		else if(pbuf[0] == ANSWER_PKT_HEADER2 && pbuf[1] == ANSWER_PKT_HEADER3 && szbuf > 8)
+//		else if(pbuf[0] == ANSWER_PKT_HEADER1 && szbuf == ANSWER_PKT_SIZE1)
 //		{
-//			send_data[0]=pbuf[8];
-//			send_data[1]=pbuf[7];
+//			send_data[0]=pbuf[7];
+//			send_data[1]=pbuf[6];
 //			rt_device_write(dev5, 0, send_data, 9);
 //		}
+		//laokuan jiguangqi
+		else if(pbuf[0] == ANSWER_PKT_HEADER2 && pbuf[1] == ANSWER_PKT_HEADER3 && szbuf > 8)
+		{
+			send_data[0]=pbuf[8];
+			send_data[1]=pbuf[7];
+			
+			env->laser_dis=((float)(pbuf[7]*256+pbuf[8]))/10;
+			env->trck_action = TRACK_ACTION_ZOOM_SHOW;
+			rt_sem_release(env->sh_track);
+			
+			rt_device_write(dev5, 0, send_data, 9);
+		}
 		else
 		{
 			

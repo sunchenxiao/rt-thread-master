@@ -378,7 +378,28 @@ void sbus_resolving_entry(void* parameter)
                     }
                 }
                 break;
-            case 8: // done
+			case 8:
+				if (pval[i] < SBUS_THRESHOLD_INVAILED)
+                    tmp_status = SBUS_INVAILD;
+                else if (pval[i] < SBUS_THRESHOLD_LOW)
+                    tmp_status = SBUS_LOW;
+                else if (pval[i] < SBUS_THRESHOLD_HIGH)
+                    tmp_status = SBUS_IDLE;
+                else
+                    tmp_status = SBUS_HIGH;
+                
+                if (env->ch_status[i] != tmp_status)
+                {
+                    env->ch_status[i] = tmp_status;
+                    
+                    if (env->ch_status[i] == SBUS_HIGH)
+                    {
+                        env->ptz_action = PANTILT_ACTION_ASK;
+						ptz_request = RT_TRUE;
+                    }
+                }
+				break;
+            case 9: // done
                 if (pval[i] < SBUS_THRESHOLD_INVAILED)
                     tmp_status = SBUS_INVAILD;
                 else if (pval[i] < SBUS_THRESHOLD_LOW)
@@ -412,7 +433,7 @@ void sbus_resolving_entry(void* parameter)
                     }
                 }
                 break;
-			case 9: // done
+			case 10: // done
                 if (pval[i] < SBUS_THRESHOLD_INVAILED)
                     tmp_status = SBUS_INVAILD;
                 else if (pval[i] < SBUS_THRESHOLD_LOW)

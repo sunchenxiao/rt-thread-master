@@ -184,12 +184,12 @@ static void pantilt_data_send_entry(void* parameter)
         else if(ubase16 == IRSENSOR_COLOR_PKT_HEADER)
         {
             LOG_D("send to irsensor color");
-            rt_device_write(dev5, 0, pbuf, IRSENSOR_COLOR_PKT_SIZE);
+            rt_device_write(dev, 0, pbuf, IRSENSOR_COLOR_PKT_SIZE);
         }
         else if(ubase16 == IRSENSOR_ZOOM_PKT_HEADER)
         {
             LOG_D("send to irsensor zoom");
-            rt_device_write(dev5, 0, pbuf, IRSENSOR_ZOOM_PKT_SIZE);
+            rt_device_write(dev, 0, pbuf, IRSENSOR_ZOOM_PKT_SIZE);
         }
         else if(ubase16 == PANTILT_CALIB_PKT_HEADER)
         {
@@ -244,32 +244,47 @@ static void pantilt_data_recv_entry(void* parameter)
         }
         
         if(pbuf[0] == ANSWER_PKT_HEADER0&&szbuf>72)
-				{
-					send_angle_data[1]=0;
-					send_angle_data[2]=0;
-					send_angle_data[3]=pbuf[69];
-					send_angle_data[4]=pbuf[70];
-					send_angle_data[5]=pbuf[71];
-					send_angle_data[6]=pbuf[72];
-				}else if(szbuf==6){
-					send_angle_data[1]=pbuf[0];
-					send_angle_data[2]=pbuf[1];
-					send_angle_data[3]=pbuf[2];
-					send_angle_data[4]=pbuf[3];
-					send_angle_data[5]=pbuf[4];
-					send_angle_data[6]=pbuf[5];
-				}else{
-					
-				}
-				
-				rt_memcpy(&send_angle_data[7],&env->cam_zoom_pos,sizeof(rt_uint16_t));
-        
-				rt_device_write(dev1, 0, send_angle_data, SEND_PKT_DATA_SIZE);			
-				
-				szbuf = 0;
-				
-				//原版数据
-				/*result = rt_sem_take(semaph, RT_WAITING_FOREVER);
+		{
+			send_angle_data[1]=0;
+			send_angle_data[2]=0;
+			send_angle_data[3]=pbuf[69];
+			send_angle_data[4]=pbuf[70];
+			send_angle_data[5]=pbuf[71];
+			send_angle_data[6]=pbuf[72];
+		}else if(szbuf==6){
+			send_angle_data[1]=pbuf[0];
+			send_angle_data[2]=pbuf[1];
+			send_angle_data[3]=pbuf[2];
+			send_angle_data[4]=pbuf[3];
+			send_angle_data[5]=pbuf[4];
+			send_angle_data[6]=pbuf[5];
+		}else{
+			
+		}
+		
+		if(env->irs_zoom==0)
+		{
+			send_angle_data[7]=0;
+		}
+		else if(env->irs_zoom==1)
+		{
+			send_angle_data[7]=1;
+		}
+		else if(env->irs_zoom==2)
+		{
+			send_angle_data[7]=3;
+		}
+		else
+		{
+			send_angle_data[7]=7;
+		}
+
+		rt_device_write(dev1, 0, send_angle_data, SEND_PKT_DATA_SIZE);			
+		
+		szbuf = 0;
+		
+		//原版数据
+		/*result = rt_sem_take(semaph, RT_WAITING_FOREVER);
         
         if(result == -RT_ETIMEOUT)
             continue;

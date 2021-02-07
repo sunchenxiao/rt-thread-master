@@ -124,6 +124,7 @@ struct guardian_environment
 	float           ptz_yaw;
     float           ptz_pitch;
     float           ptz_roll;
+	float           laser_dis;
     
     // User
     rt_bool_t       user_incharge;

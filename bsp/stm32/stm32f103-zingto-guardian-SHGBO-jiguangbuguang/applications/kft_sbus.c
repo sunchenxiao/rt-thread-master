@@ -434,6 +434,32 @@ void sbus_resolving_entry(void* parameter)
                     }
                 }
                 break;
+			case 10: // done
+                if (pval[i] < SBUS_THRESHOLD_INVAILED)
+                    tmp_status = SBUS_INVAILD;
+                else if (pval[i] < SBUS_THRESHOLD_LOW)
+                    tmp_status = SBUS_LOW;
+                else if (pval[i] < SBUS_THRESHOLD_HIGH)
+                    tmp_status = SBUS_IDLE;
+                else
+                    tmp_status = SBUS_HIGH;
+                
+                if (env->ch_status[i] != tmp_status)
+                {
+                    env->ch_status[i] = tmp_status;
+                    
+                    if (env->ch_status[i] == SBUS_LOW)
+                    {
+                        env->trck_action = TRACK_ACTION_LASER_OFF;
+						trck_request = RT_TRUE;
+                    }
+                    else if (env->ch_status[i] == SBUS_HIGH)
+                    {
+                        env->trck_action = TRACK_ACTION_LASER_ON;
+						trck_request = RT_TRUE;
+                    }
+                }
+                break;
             default:
                 break;
             }

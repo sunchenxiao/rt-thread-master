@@ -309,8 +309,16 @@ void zingto_resolving_entry(void* parameter)
             ptz_request = RT_TRUE;        
             break;
         case 0x18:  // ir zoom 
-            env->ptz_action = PANTILT_ACTION_IRZOOM;
-            env->irs_zoom = speedlv;
+//            env->ptz_action = PANTILT_ACTION_IRZOOM;
+//            env->irs_zoom = speedlv;
+//            ptz_request = RT_TRUE;
+		
+			env->ptz_action = PANTILT_ACTION_IRZOOM;
+			env->irs_zoom++;
+			if(env->irs_zoom == 4)
+			{
+				env->irs_zoom =0;
+			}  
             ptz_request = RT_TRUE;
             break;
         default:

@@ -252,6 +252,14 @@ void zingto_resolving_entry(void* parameter)
 			env->trck_offset_y=((pbuf[4]-128)*1080/256+65536)%65536;
             trck_request = RT_TRUE;
             break;
+		case 0x1A:
+            env->trck_action = TRACK_ACTION_LASER_ON;
+            trck_request = RT_TRUE;
+            break;
+		case 0x1B:
+            env->trck_action = TRACK_ACTION_LASER_OFF;
+            trck_request = RT_TRUE;
+            break;
         default:
             LOG_W("unknown opcode, %02X", opcode);
             break;

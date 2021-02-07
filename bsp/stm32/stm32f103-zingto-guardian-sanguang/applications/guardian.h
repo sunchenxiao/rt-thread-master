@@ -88,6 +88,7 @@ void track_resolving_entry(void* parameter);
 /* zingto kernel function thread */
 void zingto_resolving_entry(void* parameter);
 
+void ask_resolving_entry(void* parameter);
 /* environment struct */
 struct guardian_environment
 {

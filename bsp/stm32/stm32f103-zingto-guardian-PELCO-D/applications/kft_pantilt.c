@@ -193,12 +193,12 @@ static void pantilt_data_send_entry(void* parameter)
         else if(ubase16 == IRSENSOR_COLOR_PKT_HEADER)
         {
             LOG_D("send to irsensor color");
-            rt_device_write(dev1, 0, pbuf, IRSENSOR_COLOR_PKT_SIZE);
+            rt_device_write(dev, 0, pbuf, IRSENSOR_COLOR_PKT_SIZE);
         }
         else if(ubase16 == IRSENSOR_ZOOM_PKT_HEADER)
         {
             LOG_D("send to irsensor zoom");
-            rt_device_write(dev1, 0, pbuf, IRSENSOR_ZOOM_PKT_SIZE);
+            rt_device_write(dev, 0, pbuf, IRSENSOR_ZOOM_PKT_SIZE);
         }
         else if(ubase16 == PANTILT_CALIB_PKT_HEADER)
         {
@@ -540,11 +540,11 @@ void pantilt_resolving_entry(void* parameter)
                             
                 ctrlpkt.HEADER = PANTILT_PKT_HEADER;
                 
-                dval_pitch = env->ch_value[1] - SBUS_VALUE_MEDIAN;    // pitch
+                dval_pitch = env->ch_value[13] - SBUS_VALUE_MEDIAN;    // pitch
                 if (abs(dval_pitch) < SBUS_VALUE_IGNORE)
                     dval_pitch = 0;
                
-                dval_yaw = env->ch_value[3] - SBUS_VALUE_MEDIAN;    // yaw
+                dval_yaw = env->ch_value[12] - SBUS_VALUE_MEDIAN;    // yaw
                 if (abs(dval_yaw) < SBUS_VALUE_IGNORE)
                     dval_yaw = 0;
                 

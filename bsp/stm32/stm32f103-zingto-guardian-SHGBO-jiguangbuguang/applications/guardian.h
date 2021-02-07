@@ -54,6 +54,8 @@ void camera_resolving_entry(void* parameter);
 #define CAMERA_CMD_ZOOM_STOP        ( 0x00000200 )
 #define CAMERA_CMD_ZOOM_GETPOS      ( 0x00000400 )
 #define CAMERA_CMD_BRIGHT_GETPOS    ( 0x00000800 )
+#define CAMERA_CMD_ICR_ON   	    ( 0x00001000 )
+#define CAMERA_CMD_ICR_OFF   	    ( 0x00002000 )
 
 /* pantilt kernel function thread */
 void pantilt_resolving_entry(void* parameter);
@@ -69,6 +71,9 @@ void pantilt_resolving_entry(void* parameter);
 #define PANTILT_ACTION_IRZOOM           (0x06)
 #define PANTILT_ACTION_CALIBRATE        (0x07)
 #define PANTILT_ACTION_ASK     			(0x08)
+#define PANTILT_ACTION_OPENLASER   		(0x09)
+#define PANTILT_ACTION_CLOSELASER    	(0x0A)
+#define PANTILT_ACTION_SETLASER   		(0x0B)
 
 #define PANTILT_MODE_HEADDOWN      	    (0x02)
 #define PANTILT_MODE_HEADLOCK      	    (0x03)
@@ -89,6 +94,8 @@ void track_resolving_entry(void* parameter);
 #define TRACK_ACTION_IRCOLOR			(0x09)
 #define TRACK_ACTION_IRZOOM				(0x0A)
 #define TRACK_ACTION_POINT_START        (0x0B)
+#define TRACK_ACTION_LASER_ON    	    (0x0C)
+#define TRACK_ACTION_LASER_OFF   	    (0x0D)
 
 /* zingto kernel function thread */
 void zingto_resolving_entry(void* parameter);

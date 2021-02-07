@@ -41,6 +41,9 @@ const char XUANZHAN_LOGO_SNAP_OFF[] = "<?xml version=\"1.0\" encoding=\"GB2312\"
 #define VISCA_GET_ZOOMPOS_ACK_SIZE      (7)
 
 
+rt_uint8_t VISCA_ICR_ON[]     	  = {0x81, 0x01, 0x04, 0x01, 0x02, 0xFF};
+rt_uint8_t VISCA_ICR_OFF[]        = {0x81, 0x01, 0x04, 0x01, 0x03, 0xFF};
+rt_uint8_t VISCA_AUTOICR_OFF[]    = {0x81, 0x01, 0x04, 0x51, 0x03, 0xFF};
 rt_uint8_t VISCA_ZOOM_IN[]        = {0x81, 0x01, 0x04, 0x07, 0x20, 0xFF};
 rt_uint8_t VISCA_ZOOM_OUT[]       = {0x81, 0x01, 0x04, 0x07, 0x30, 0xFF};
 const rt_uint8_t VISCA_ZOOM_STOP[]      = {0x81, 0x01, 0x04, 0x07, 0x00, 0xFF};
@@ -243,6 +246,18 @@ void camera_resolving_entry(void* parameter)
                 uart_clean_recv_buff(dev, pbuf);
                 uart_send_with_block(dev, (rt_uint8_t*)VISCA_ZOOM_STOP, sizeof(VISCA_ZOOM_STOP));
                 LOG_D("VISCA_ZOOM_STOP");
+                break;
+			case CAMERA_CMD_ICR_ON:
+                
+                uart_clean_recv_buff(dev, pbuf);
+                uart_send_with_block(dev, (rt_uint8_t*)VISCA_ICR_ON, sizeof(VISCA_ICR_ON));
+                LOG_D("VISCA_ICR_ON");
+                break;
+			case CAMERA_CMD_ICR_OFF:
+                
+                uart_clean_recv_buff(dev, pbuf);
+                uart_send_with_block(dev, (rt_uint8_t*)VISCA_ICR_OFF, sizeof(VISCA_ICR_OFF));
+                LOG_D("VISCA_ICR_OFF");
                 break;
 			case CAMERA_CMD_BRIGHT_GETPOS:
 				uart_clean_recv_buff(dev, pbuf);

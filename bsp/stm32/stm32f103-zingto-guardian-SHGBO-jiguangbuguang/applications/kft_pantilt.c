@@ -67,9 +67,15 @@ rt_uint8_t ptz_askctrlpkt[PTZ_ASK_PKT_SIZE] = {0xE1,0x1E,0x12,0xF1,0x1F};
 
 rt_uint8_t ptz_askctrlpkt_jiguang[PTZ_ASK_PKT_SIZE] = {0xF1,0x1F,0x12,0xF1,0x1F};
 
+#define PTZ_SET_LASER_SIZE (7)  
+
+rt_uint8_t ptz_set_laser[PTZ_SET_LASER_SIZE] = {0xFF,0x01,0x00,0x00,0x00,0x00,0x00};
+
 rt_uint8_t ask_laser_distance=0;
 
 #define IRSENSOR_ZOOM_PKT_SIZE  (16)
+#define SEND_PKT_DATA_SIZE		(9)
+rt_uint8_t send_angle_data[SEND_PKT_DATA_SIZE]={0xEE,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
 
 rt_uint8_t irs_zoom[8][IRSENSOR_ZOOM_PKT_SIZE] = {
     {0xAA, 0x0C, 0x01, 0x40, 0x02, 0x00, 0x00, 0x00, 0x00, 0x7F, 0x01, 0x1F, 0x01, 0x99, 0xEB, 0xAA},
@@ -107,6 +113,7 @@ rt_uint8_t calib_protcol[4][PANTILT_CALIB_PKT_SIZE] = {
 #define IRSENSOR_ZOOM_PKT_HEADER    (0x0CAA)
 #define PANTILT_CALIB_PKT_HEADER    (0x1EE1)
 #define PTZ_ASK_PKT_HEADER    		(0x1FF1)
+#define PTZ_SET_LASER_HEADER    	(0x01FF)
 
 #define PANTILT_VALUE_MAXIMUM   	(500)
 #define PANTILT_VALUE_MININUM   	(-500)
@@ -193,6 +200,10 @@ static void pantilt_data_send_entry(void* parameter)
             LOG_D("send to irsensor zoom");
             rt_device_write(dev1, 0, pbuf, IRSENSOR_ZOOM_PKT_SIZE);
         }
+		else if(ubase16 == PTZ_SET_LASER_HEADER)
+        { 
+			rt_device_write(dev, 0, pbuf, PTZ_SET_LASER_SIZE);
+        }
 		else if(ubase16 == PTZ_ASK_PKT_HEADER)
         { 
 			//Erboli jiguangqi
@@ -256,10 +267,13 @@ static void pantilt_data_recv_entry(void* parameter)
 		if(pbuf[0] == ANSWER_PKT_HEADER0 && szbuf > (ANSWER_PKT_SIZE0-1))
 		{
 			//yaw 71 72     pitch 69 70
-			send_data[2]=pbuf[69];
-			send_data[3]=pbuf[70];
-			send_data[4]=pbuf[71];
-			send_data[5]=pbuf[72];
+			send_angle_data[1]=0;
+			send_angle_data[2]=0;
+			send_angle_data[3]=pbuf[69];
+			send_angle_data[4]=pbuf[70];
+			send_angle_data[5]=pbuf[71];
+			send_angle_data[6]=pbuf[72];
+			send_angle_data[7]=env->cam_zoom_pos;
 			
 			rt_int16_t  temp = 0;
 			temp = *(rt_int16_t*)&pbuf[71];
@@ -279,11 +293,9 @@ static void pantilt_data_recv_entry(void* parameter)
 			
 			env->ptz_roll = .0f;
 			
-			LOG_D("PTZ: %d %d", *(rt_int16_t*)&pbuf[69], *(rt_int16_t*)&pbuf[71]);
+			rt_device_write(dev5, 0, send_angle_data, SEND_PKT_DATA_SIZE);
 			
-			// notice the tracker thread to show.
-			env->trck_action = TRACK_ACTION_ZOOM_SHOW;
-			rt_sem_release(env->sh_track);
+			//LOG_D("PTZ: %d %d", *(rt_int16_t*)&pbuf[69], *(rt_int16_t*)&pbuf[71]);
 		}
 		//Erboli jiguangqi
 		else if(pbuf[0] == ANSWER_PKT_HEADER1 && szbuf == ANSWER_PKT_SIZE1)
@@ -402,36 +414,141 @@ void pantilt_resolving_entry(void* parameter)
             rt_mb_send(mailbox, (rt_ubase_t)pbuf);
   
         }
-        else if (env->ptz_action == PANTILT_ACTION_CALIBRATE)
+        else if (env->ptz_action == PANTILT_ACTION_OPENLASER)
         {
-            LOG_D("PANTILT_ACTION_CALIBRATE");
-            env->ptz_action = PANTILT_ACTION_NULL;
-            
-            for (int i = 0; i < 4; i++)
-            {
-                pktsz = sizeof(ptz_serialctrlpkt);
-                rt_memset(&ctrlpkt, 0x00, pktsz);
-                ctrlpkt.HEADER = PANTILT_PKT_HEADER;
-                
-                switch(i) {
-                    case 0:
-                    case 2:
-                    default:
-                        ctrlpkt.mode = 0x6400;
-                        break;
-                    case 1:
-                    case 3:
-                        ctrlpkt.mode = 0x9BFE;
-                        break;
-                }         
-                
-                pantilt_update_checksum(&ctrlpkt);
-                pbuf = rt_mp_alloc(mempool, RT_WAITING_FOREVER);
-                rt_memcpy(pbuf, &ctrlpkt, pktsz);
-                rt_mb_send(mailbox, (rt_ubase_t)pbuf);
-                
-                rt_thread_delay(200);
-            }
+            LOG_D("PANTILT_ACTION_OPENLASER");
+
+            ask_laser_distance=1;
+			env->ptz_action = PANTILT_ACTION_NULL;
+			
+			ptz_set_laser[2]=0x01;
+			ptz_set_laser[3]=0x01;
+			ptz_set_laser[4]=0x01;
+			ptz_set_laser[5]=0x00;
+			ptz_set_laser[6]=ptz_set_laser[1]+ptz_set_laser[2]+ptz_set_laser[3]+ptz_set_laser[4]+ptz_set_laser[5];
+			
+			pbuf = rt_mp_alloc(mempool, RT_WAITING_FOREVER);
+			rt_memcpy(pbuf, ptz_set_laser, PTZ_SET_LASER_SIZE);
+			rt_mb_send(mailbox, (rt_ubase_t)pbuf);
+			
+			rt_thread_mdelay(100);
+			ptz_set_laser[2]=0x01;
+			ptz_set_laser[3]=0x03;
+			ptz_set_laser[4]=0xFF;
+			ptz_set_laser[5]=0x00;
+			ptz_set_laser[6]=ptz_set_laser[1]+ptz_set_laser[2]+ptz_set_laser[3]+ptz_set_laser[4]+ptz_set_laser[5];
+			
+			pbuf = rt_mp_alloc(mempool, RT_WAITING_FOREVER);
+			rt_memcpy(pbuf, ptz_set_laser, PTZ_SET_LASER_SIZE);
+			rt_mb_send(mailbox, (rt_ubase_t)pbuf);
+			
+			continue;	
+        }
+		else if (env->ptz_action == PANTILT_ACTION_CLOSELASER)
+        {
+            LOG_D("PANTILT_ACTION_OPENLASER");
+
+            ask_laser_distance=1;
+			env->ptz_action = PANTILT_ACTION_NULL;
+			
+			ptz_set_laser[2]=0x01;
+			ptz_set_laser[3]=0x01;
+			ptz_set_laser[4]=0x00;
+			ptz_set_laser[5]=0x00;
+			ptz_set_laser[6]=ptz_set_laser[1]+ptz_set_laser[2]+ptz_set_laser[3]+ptz_set_laser[4]+ptz_set_laser[5];
+			
+			pbuf = rt_mp_alloc(mempool, RT_WAITING_FOREVER);
+			rt_memcpy(pbuf, ptz_set_laser, PTZ_SET_LASER_SIZE);
+			rt_mb_send(mailbox, (rt_ubase_t)pbuf);
+			continue;	
+        }
+		else if (env->ptz_action == PANTILT_ACTION_SETLASER)
+        {
+            LOG_D("PANTILT_ACTION_OPENLASER");
+
+            ask_laser_distance=1;
+			env->ptz_action = PANTILT_ACTION_NULL;
+			
+			ptz_set_laser[2]=0x01;
+			ptz_set_laser[3]=0x05;
+			
+			if(env->cam_zoom_pos<1)
+			{
+				ptz_set_laser[4]=0x05;
+				ptz_set_laser[5]=0x44;
+			}
+			else if(env->cam_zoom_pos<2)
+			{
+				ptz_set_laser[4]=0x04;
+				ptz_set_laser[5]=0x64;
+			}
+			else if(env->cam_zoom_pos<3)
+			{
+				ptz_set_laser[4]=0x03;
+				ptz_set_laser[5]=0x64;
+			}
+			else if(env->cam_zoom_pos<4)
+			{
+				ptz_set_laser[4]=0x03;
+				ptz_set_laser[5]=0x04;
+			}
+			else if(env->cam_zoom_pos<5)
+			{
+				ptz_set_laser[4]=0x02;
+				ptz_set_laser[5]=0xB4;
+			}
+			else if(env->cam_zoom_pos<6)
+			{
+				ptz_set_laser[4]=0x02;
+				ptz_set_laser[5]=0x94;
+			}
+			else if(env->cam_zoom_pos<7)
+			{
+				ptz_set_laser[4]=0x02;
+				ptz_set_laser[5]=0x24;
+			}
+			else if(env->cam_zoom_pos<8)
+			{
+				ptz_set_laser[4]=0x01;
+				ptz_set_laser[5]=0xF4;
+			}
+			else if(env->cam_zoom_pos<10)
+			{
+				ptz_set_laser[4]=0x01;
+				ptz_set_laser[5]=0x84;
+			}
+			else if(env->cam_zoom_pos<12)
+			{
+				ptz_set_laser[4]=0x01;
+				ptz_set_laser[5]=0x44;
+			}
+			else if(env->cam_zoom_pos<14)
+			{
+				ptz_set_laser[4]=0x01;
+				ptz_set_laser[5]=0x44;
+			}
+			else if(env->cam_zoom_pos<16)
+			{
+				ptz_set_laser[4]=0x01;
+				ptz_set_laser[5]=0x24;
+			}
+			else if(env->cam_zoom_pos<22)
+			{
+				ptz_set_laser[4]=0x00;
+				ptz_set_laser[5]=0xF4;
+			}
+			else
+			{
+				ptz_set_laser[4]=0x00;
+				ptz_set_laser[5]=0xC4;
+			}
+
+			ptz_set_laser[6]=ptz_set_laser[1]+ptz_set_laser[2]+ptz_set_laser[3]+ptz_set_laser[4]+ptz_set_laser[5];
+			
+			pbuf = rt_mp_alloc(mempool, RT_WAITING_FOREVER);
+			rt_memcpy(pbuf, ptz_set_laser, PTZ_SET_LASER_SIZE);
+			rt_mb_send(mailbox, (rt_ubase_t)pbuf);
+			continue;	
         }
         else if (env->ptz_action == PANTILT_ACTION_HOMING)
         {
@@ -684,14 +801,11 @@ void ask_resolving_entry(void* parameter)
 	{
 		if(ask_laser_distance==0)
 		{
-//			if(env->send_flag==0)
-//			{
-//				env->send_flag=1;
-//				rt_uint8_t *pbuf = RT_NULL;
-//				pbuf = rt_mp_alloc(mempool, RT_WAITING_FOREVER);
-//				rt_memcpy(pbuf, ptz_askctrlpkt, PTZ_ASK_PKT_SIZE);
-//				rt_mb_send(mailbox, (rt_ubase_t)pbuf);
-//			}
+			rt_uint8_t *pbuf = RT_NULL;
+			pbuf = rt_mp_alloc(mempool, RT_WAITING_FOREVER);
+			rt_memcpy(pbuf, ptz_askctrlpkt, PTZ_ASK_PKT_SIZE);
+			rt_mb_send(mailbox, (rt_ubase_t)pbuf);
+			
 			if(env->send_flag==0)
 			{
 				env->send_flag=1;

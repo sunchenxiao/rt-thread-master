@@ -430,9 +430,9 @@ void track_resolving_entry(void* parameter)
         
 		if (env->trck_action == TRACK_ACTION_ZOOM_SHOW)
         {
-			ctrlpkt.__reserved1 = 0x10;
+			ctrlpkt.__reserved1 = 0x00;
 			ctrlpkt.set_mode = 0x83;
-			ctrlpkt.set_fuction = 0x30;
+			ctrlpkt.set_fuction = 0x34;
             
             float  zoomf32 = 0.f;
             if (env->cam_zoom_pos < 30)
@@ -442,7 +442,8 @@ void track_resolving_entry(void* parameter)
             
 			rt_memcpy(ctrlpkt.__reserved8 + 4, &zoomf32, 4);
             rt_memcpy(&ctrlpkt.set_ircolor, &env->ptz_yaw, sizeof(float));
-			rt_memcpy(ctrlpkt.__reserved8, &env->ptz_pitch, sizeof(float));		
+			rt_memcpy(ctrlpkt.__reserved8, &env->ptz_pitch, sizeof(float));	
+			rt_memcpy(ctrlpkt.__reserved8+24, &env->laser_dis, sizeof(float));				
         }
         else if (env->trck_action == TRACK_ACTION_PREPARE)
         {

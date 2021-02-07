@@ -115,6 +115,8 @@ const rt_uint8_t VISCA_ZOOM[41][VISCA_SET_ZOOMPOS_CMD_SIZE] =
     {0x81, 0x01, 0x04, 0x47, 0x07, 0x0a, 0x0c, 0x00, 0xFF}  //30X * 12X
 };
 
+rt_uint8_t laser_flag=0;
+
 rt_err_t uart_hook_callback(rt_device_t dev, rt_size_t sz)
 {
     rt_sem_release(semaph);
@@ -346,14 +348,55 @@ static void track_data_recv_entry(void* parameter)
 			
 			env->cam_zoom_pos = nZoom;
 			rt_kprintf("env->cam_zoom_pos  %d \n",env->cam_zoom_pos);
+				
+			if(laser_flag==1)
+			{
+				env->ptz_action = PANTILT_ACTION_SETLASER;
+				if (env->sh_ptz != RT_NULL)
+				{
+					env->user_incharge = RT_TRUE;
+					rt_sem_release(env->sh_ptz); // notify the PanTiltZoom.
+				}
+			}
+			
+			// notice the tracker thread to show.
+			env->trck_action = TRACK_ACTION_ZOOM_SHOW;
+			rt_sem_release(env->sh_track);
+			
 			env->cam_getpos_tick = rt_tick_get();
 		}
-		else if(pbuf[0] == 0x90 && pbuf[1] == 0x50 && env->send_flag==0)
-		{
-			
-			rt_kprintf("env->bright_pos  %d  %d \n",pbuf[4],pbuf[5]);
-			
-		}
+//		else if(pbuf[0] == 0x90 && pbuf[1] == 0x50 && env->send_flag==0)
+//		{		
+//			rt_kprintf("env->bright_pos  %d  %d \n",pbuf[4],pbuf[5]);
+//			if(pbuf[4]>0&&pbuf[5]>10)
+//			{
+//				if(laser_flag==0)
+//				{
+//					laser_flag=1;
+//					env->ptz_action = PANTILT_ACTION_OPENLASER;
+//					if (env->sh_ptz != RT_NULL)
+//					{
+//						env->user_incharge = RT_TRUE;
+//						rt_sem_release(env->sh_ptz); // notify the PanTiltZoom.
+//					}
+//					rt_event_send(env->ev_camera, CAMERA_CMD_ICR_ON);
+//				}
+//			}
+//			else
+//			{
+//				if(laser_flag==1)
+//				{
+//					laser_flag=0;
+//					env->ptz_action = PANTILT_ACTION_CLOSELASER;
+//					if (env->sh_ptz != RT_NULL)
+//					{
+//						env->user_incharge = RT_TRUE;
+//						rt_sem_release(env->sh_ptz); // notify the PanTiltZoom.
+//					}
+//					rt_event_send(env->ev_camera, CAMERA_CMD_ICR_OFF);
+//				}
+//			}
+//		}
 		else
 		{
 			
@@ -431,7 +474,7 @@ void track_resolving_entry(void* parameter)
         
 		if (env->trck_action == TRACK_ACTION_ZOOM_SHOW)
         {
-			ctrlpkt.__reserved1 = 0x10;
+			ctrlpkt.__reserved1 = 0x14; //0x10ÏÔÊ¾×ËÌ¬½Ç
 			ctrlpkt.set_mode = 0x83;
 			ctrlpkt.set_fuction = 0x30;
             
@@ -444,6 +487,34 @@ void track_resolving_entry(void* parameter)
 			rt_memcpy(ctrlpkt.__reserved8 + 4, &zoomf32, 4);
             rt_memcpy(&ctrlpkt.set_ircolor, &env->ptz_yaw, sizeof(float));
 			rt_memcpy(ctrlpkt.__reserved8, &env->ptz_pitch, sizeof(float));           
+        }
+		else if (env->trck_action == TRACK_ACTION_LASER_ON)
+        {
+            if(laser_flag==0)
+			{
+				laser_flag=1;
+				env->ptz_action = PANTILT_ACTION_OPENLASER;
+				if (env->sh_ptz != RT_NULL)
+				{
+					env->user_incharge = RT_TRUE;
+					rt_sem_release(env->sh_ptz); // notify the PanTiltZoom.
+				}
+				rt_event_send(env->ev_camera, CAMERA_CMD_ICR_ON);
+			}
+        }
+		else if (env->trck_action == TRACK_ACTION_LASER_OFF)
+        {
+            if(laser_flag==1)
+			{
+				laser_flag=0;
+				env->ptz_action = PANTILT_ACTION_CLOSELASER;
+				if (env->sh_ptz != RT_NULL)
+				{
+					env->user_incharge = RT_TRUE;
+					rt_sem_release(env->sh_ptz); // notify the PanTiltZoom.
+				}
+				rt_event_send(env->ev_camera, CAMERA_CMD_ICR_OFF);
+			}
         }
         else if (env->trck_action == TRACK_ACTION_PREPARE)
         {
