@@ -20,7 +20,7 @@
 #define DBG_COLOR
 #include <rtdbg.h>
 
-#define ZINGTO_UARTPORT_NAME "uart5"
+#define ZINGTO_UARTPORT_NAME "uart1"
 #define ZINGTO_SEMAPHORE_NAME "shZINGTO"
 
 
@@ -66,7 +66,7 @@ void zingto_resolving_entry(void* parameter)
     RT_ASSERT(dev != RT_NULL);
     rt_device_open(dev, RT_DEVICE_OFLAG_RDWR | RT_DEVICE_FLAG_INT_RX);
 	
-	dev1 = rt_device_find("uart1");
+	dev1 = rt_device_find("uart5");
     RT_ASSERT(dev1 != RT_NULL);
 
     semaph = rt_sem_create(ZINGTO_SEMAPHORE_NAME, 0, RT_IPC_FLAG_FIFO);
@@ -90,7 +90,7 @@ void zingto_resolving_entry(void* parameter)
 			continue;
 		}else {
 			if (szbuf == 0)
-			continue;       // ignore idle frame.
+				continue;       // ignore idle frame.
         }
 				
 //      if(pbuf[0]==0x81)

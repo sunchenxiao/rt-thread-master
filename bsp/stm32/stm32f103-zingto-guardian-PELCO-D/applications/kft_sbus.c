@@ -190,9 +190,9 @@ void sbus_resolving_entry(void* parameter)
                     }
                 }*/
                 break;                
-            case 13: // pitch
-            case 12: // yaw
-                if (abs(pval[i] - env->ch_value[i]) > 10)
+            case 10: // pitch
+            case 11: // yaw
+                if (pval[i] != env->ch_value[i])
                 {                    
                     env->ch_change[i] = RT_TRUE;
                     env->ch_value[i] = pval[i];
@@ -201,164 +201,164 @@ void sbus_resolving_entry(void* parameter)
                     ptz_request = RT_TRUE;
                 }
                 break;
-//            case 10: // zoom
-//				{
-//					rt_int8_t tmpuc = 0;
-//					rt_int16_t differ = 0;
-//					
-//					differ = pval[i] - SBUS_VALUE_MEDIAN;
+//            case 11: // zoom
+//            {
+//                rt_int8_t tmpuc = 0;
+//                rt_int16_t differ = 0;
+//                
+//                differ = pval[i] - SBUS_VALUE_MEDIAN;
 
-//					if (abs(differ) < 100)
-//						tmpuc = 0;
-//					else if (abs(differ) < 200)
-//						tmpuc = 2;
-//					else if (abs(differ) < 300)
-//						tmpuc = 3;
-//					else if (abs(differ) < 400)
-//						tmpuc = 4;
-//					else if (abs(differ) < 500)
-//						tmpuc = 5;
-//					else if (abs(differ) < 600)
-//						tmpuc = 6;
-//					else 
-//						tmpuc = 7;
-//					
-//					if (env->cam_zoom_speed != tmpuc)
-//					{
-//						env->cam_zoom_speed = tmpuc;
-//						
-//						if (differ < -100)
-//							cam_eval = CAMERA_CMD_ZOOM_OUT;
-//						else if (differ > 100)
-//							cam_eval = CAMERA_CMD_ZOOM_IN;
-//						else
-//							cam_eval = CAMERA_CMD_ZOOM_STOP;
-//						
-//						cam_eval |= CAMERA_CMD_ZOOM_GETPOS;
-//						
-//						cam_request = RT_TRUE;
-//					}
-//					else
-//					{
-//						if ( env->cam_zoom_speed != 0)
-//						{
-//							if (rt_tick_get() - env->cam_getpos_tick > RT_TICK_PER_SECOND / 2)
-//							{
-//								cam_eval = CAMERA_CMD_ZOOM_GETPOS;
-//								cam_request = RT_TRUE;
-//							}
-//						}
-//					}
-//				}
-//                break;
-//            case 9: // done
-//                if (pval[i] < SBUS_THRESHOLD_INVAILED)
-//                    tmp_status = SBUS_INVAILD;
-//                else if (pval[i] < SBUS_THRESHOLD_LOW)
-//                    tmp_status = SBUS_LOW;
-//                else if (pval[i] < SBUS_THRESHOLD_HIGH)
-//                    tmp_status = SBUS_IDLE;
-//                else
-//                    tmp_status = SBUS_HIGH;
+//                if (abs(differ) < 100)
+//                    tmpuc = 0;
+//                else if (abs(differ) < 200)
+//                    tmpuc = 2;
+//                else if (abs(differ) < 300)
+//                    tmpuc = 3;
+//                else if (abs(differ) < 400)
+//                    tmpuc = 4;
+//                else if (abs(differ) < 500)
+//                    tmpuc = 5;
+//                else if (abs(differ) < 600)
+//                    tmpuc = 6;
+//                else 
+//                    tmpuc = 7;
 //                
-//                if (env->ch_status[i] != tmp_status)
+//                if (env->cam_zoom_speed != tmpuc)
 //                {
-//                    env->ch_status[i] = tmp_status;
+//                    env->cam_zoom_speed = tmpuc;
 //                    
-//                    ptz_request = RT_TRUE;
-//                    env->ptz_action = PANTILT_ACTION_NULL;
-//                    
-//                    if (env->ch_status[i] == SBUS_HIGH)
-//                        env->ptz_mode = PANTILT_MODE_HEADDOWN;
-//                    else if (env->ch_status[i] == SBUS_IDLE)
-//                        env->ptz_mode = PANTILT_MODE_HEADFREE;
-//                    else if (env->ch_status[i] == SBUS_LOW)
-//                        env->ptz_mode = PANTILT_MODE_HEADLOCK;
+//                    if (differ < -100)
+//                        cam_eval = CAMERA_CMD_ZOOM_OUT;
+//                    else if (differ > 100)
+//                        cam_eval = CAMERA_CMD_ZOOM_IN;
 //                    else
-//                        ptz_request = RT_FALSE;
+//                        cam_eval = CAMERA_CMD_ZOOM_STOP;
+//                    
+//                    cam_eval |= CAMERA_CMD_ZOOM_GETPOS;
+//                    
+//                    cam_request = RT_TRUE;
 //                }
-//                break;        
-//            case 8: // done
-//                if (pval[i] < SBUS_THRESHOLD_INVAILED)
-//                    tmp_status = SBUS_INVAILD;
-//                else if (pval[i] < SBUS_THRESHOLD_LOW)
-//                    tmp_status = SBUS_LOW;
-//                else if (pval[i] < SBUS_THRESHOLD_HIGH)
-//                    tmp_status = SBUS_IDLE;
 //                else
-//                    tmp_status = SBUS_HIGH;
-//                
-//                if (env->ch_status[i] != tmp_status)
 //                {
-//                    env->ch_status[i] = tmp_status;
-//                    
-//                    if (env->ch_status[i] == SBUS_HIGH)
+//                    if ( env->cam_zoom_speed != 0)
 //                    {
-//                        cam_eval = CAMERA_CMD_CAPTURE;
-//                        env->trck_action = TRACK_ACTION_CAPTURE;
-//                        
-//                        cam_request = RT_TRUE;
-//                        trck_request = RT_TRUE;
-//                    }
-//                    else if (env->ch_status[i] == SBUS_LOW)
-//                    {
-//                        if (env->cam_recording)
+//                        if (rt_tick_get() - env->cam_getpos_tick > RT_TICK_PER_SECOND / 2)
 //                        {
-//                            cam_eval = CAMERA_CMD_RECORD_OFF;
-//                            env->cam_recording = RT_FALSE;
-//                            env->trck_action = TRACK_ACTION_RECORD_OFF;
-//                        }
-//                        else
-//                        {
-//                            cam_eval = CAMERA_CMD_RECORD_ON;
-//                            env->cam_recording = RT_TRUE;
-//                            env->trck_action = TRACK_ACTION_RECORD_ON;
-//                            
-//                        }
-//                        
-//                        cam_request = RT_TRUE;
-//                        trck_request = RT_TRUE;
-//                    }
-//                    
-//                }
-//                break;
-//            case 11: // track
-//                if (pval[i] < SBUS_THRESHOLD_INVAILED)
-//                    tmp_status = SBUS_INVAILD;
-//                else if (pval[i] < SBUS_THRESHOLD_LOW)
-//                    tmp_status = SBUS_LOW;
-//                else if (pval[i] < SBUS_THRESHOLD_HIGH)
-//                    tmp_status = SBUS_IDLE;
-//                else
-//                    tmp_status = SBUS_HIGH;
-//                
-//                if (env->ch_status[i] != tmp_status)
-//                {
-//                    env->ch_status[i] = tmp_status;
-//                    
-//                    if (env->ch_status[i] == SBUS_HIGH)
-//                    {
-//                        if (env->trck_incharge == RT_FALSE)
-//                        {
-//                            if (env->trck_prepare == RT_FALSE)
-//                                env->trck_action = TRACK_ACTION_PREPARE;
-//                            else
-//                                env->trck_action = TRACK_ACTION_TRACE_START;
-//                            
-//                            trck_request = RT_TRUE;
-//                        }
-//                    }
-//                    else if (env->ch_status[i] == SBUS_LOW)
-//                    {
-//                        if ((env->trck_incharge == RT_TRUE) || (env->trck_prepare == RT_TRUE))
-//                        {
-//                            env->trck_action = TRACK_ACTION_TRACE_STOP;
-//                            trck_request = RT_TRUE;
+//                            cam_eval = CAMERA_CMD_ZOOM_GETPOS;
+//                            cam_request = RT_TRUE;
 //                        }
 //                    }
 //                }
+//            }
 //                break;
-            case 6: // done
+            case 12: // done
+                if (pval[i] < SBUS_THRESHOLD_INVAILED)
+                    tmp_status = SBUS_INVAILD;
+                else if (pval[i] < SBUS_THRESHOLD_LOW)
+                    tmp_status = SBUS_LOW;
+                else if (pval[i] < SBUS_THRESHOLD_HIGH)
+                    tmp_status = SBUS_IDLE;
+                else
+                    tmp_status = SBUS_HIGH;
+                
+                if (env->ch_status[i] != tmp_status)
+                {
+                    env->ch_status[i] = tmp_status;
+                    
+                    ptz_request = RT_TRUE;
+                    env->ptz_action = PANTILT_ACTION_NULL;
+                    
+                    if (env->ch_status[i] == SBUS_HIGH)
+                        env->ptz_mode = PANTILT_MODE_HEADDOWN;
+                    else if (env->ch_status[i] == SBUS_IDLE)
+                        env->ptz_mode = PANTILT_MODE_HEADFREE;
+                    else if (env->ch_status[i] == SBUS_LOW)
+                        env->ptz_mode = PANTILT_MODE_HEADLOCK;
+                    else
+                        ptz_request = RT_FALSE;
+                }
+                break;        
+            case 13: // done
+                if (pval[i] < SBUS_THRESHOLD_INVAILED)
+                    tmp_status = SBUS_INVAILD;
+                else if (pval[i] < SBUS_THRESHOLD_LOW)
+                    tmp_status = SBUS_LOW;
+                else if (pval[i] < SBUS_THRESHOLD_HIGH)
+                    tmp_status = SBUS_IDLE;
+                else
+                    tmp_status = SBUS_HIGH;
+                
+                if (env->ch_status[i] != tmp_status)
+                {
+                    env->ch_status[i] = tmp_status;
+                    
+                    if (env->ch_status[i] == SBUS_HIGH)
+                    {
+                        cam_eval = CAMERA_CMD_CAPTURE;
+                        env->trck_action = TRACK_ACTION_CAPTURE;
+                        
+                        cam_request = RT_TRUE;
+                        trck_request = RT_TRUE;
+                    }
+                    else if (env->ch_status[i] == SBUS_LOW)
+                    {
+                        if (env->cam_recording)
+                        {
+                            cam_eval = CAMERA_CMD_RECORD_OFF;
+                            env->cam_recording = RT_FALSE;
+                            env->trck_action = TRACK_ACTION_RECORD_OFF;
+                        }
+                        else
+                        {
+                            cam_eval = CAMERA_CMD_RECORD_ON;
+                            env->cam_recording = RT_TRUE;
+                            env->trck_action = TRACK_ACTION_RECORD_ON;
+                            
+                        }
+                        
+                        cam_request = RT_TRUE;
+                        trck_request = RT_TRUE;
+                    }
+                    
+                }
+                break;
+            case 14: // track
+                if (pval[i] < SBUS_THRESHOLD_INVAILED)
+                    tmp_status = SBUS_INVAILD;
+                else if (pval[i] < SBUS_THRESHOLD_LOW)
+                    tmp_status = SBUS_LOW;
+                else if (pval[i] < SBUS_THRESHOLD_HIGH)
+                    tmp_status = SBUS_IDLE;
+                else
+                    tmp_status = SBUS_HIGH;
+                
+                if (env->ch_status[i] != tmp_status)
+                {
+                    env->ch_status[i] = tmp_status;
+                    
+                    if (env->ch_status[i] == SBUS_HIGH)
+                    {
+                        if (env->trck_incharge == RT_FALSE)
+                        {
+                            if (env->trck_prepare == RT_FALSE)
+                                env->trck_action = TRACK_ACTION_PREPARE;
+                            else
+                                env->trck_action = TRACK_ACTION_TRACE_START;
+                            
+                            trck_request = RT_TRUE;
+                        }
+                    }
+                    else if (env->ch_status[i] == SBUS_LOW)
+                    {
+                        if ((env->trck_incharge == RT_TRUE) || (env->trck_prepare == RT_TRUE))
+                        {
+                            env->trck_action = TRACK_ACTION_TRACE_STOP;
+                            trck_request = RT_TRUE;
+                        }
+                    }
+                }
+                break;
+            case 15: // done
                 if (pval[i] < SBUS_THRESHOLD_INVAILED)
                     tmp_status = SBUS_INVAILD;
                 else if (pval[i] < SBUS_THRESHOLD_LOW)
@@ -379,7 +379,7 @@ void sbus_resolving_entry(void* parameter)
                     }
                 }
                 break;
-            case 7: // done
+            case 17: // done
                 if (pval[i] < SBUS_THRESHOLD_INVAILED)
                     tmp_status = SBUS_INVAILD;
                 else if (pval[i] < SBUS_THRESHOLD_LOW)
@@ -422,44 +422,44 @@ void sbus_resolving_entry(void* parameter)
                     }
                 }
                 break;
-//			case 14: // done
-//                if (pval[i] < SBUS_THRESHOLD_INVAILED)
-//                    tmp_status = SBUS_INVAILD;
-//                else if (pval[i] < SBUS_THRESHOLD_LOW)
-//                    tmp_status = SBUS_LOW;
-//                else if (pval[i] < SBUS_THRESHOLD_HIGH)
-//                    tmp_status = SBUS_IDLE;
-//                else
-//                    tmp_status = SBUS_HIGH;
-//                
-//                if (env->ch_status[i] != tmp_status)
-//                {
-//                    env->ch_status[i] = tmp_status;
-//                    
-//                    if (env->ch_status[i] == SBUS_LOW)
-//                    {
-//                        env->irs_zoom--;
-//                        
-//                        if (env->irs_zoom < 0)
-//                            env->irs_zoom = 0;
-//                        
-//                        LOG_I("irs_zoom: %d", env->irs_zoom);
-//                        env->ptz_action = PANTILT_ACTION_IRZOOM;
-//                        ptz_request = RT_TRUE;
-//                    }
-//                    else if (env->ch_status[i] == SBUS_HIGH)
-//                    {
-//                        env->irs_zoom++;
-//                        
-//                        if (env->irs_zoom > 4)
-//                            env->irs_zoom = 4;
-//                        
-//                        LOG_I("irs_zoom: %d", env->irs_zoom);
-//                        env->ptz_action = PANTILT_ACTION_IRZOOM;
-//                        ptz_request = RT_TRUE;
-//                    }
-//                }
-//                break;
+			case 18: // done
+                if (pval[i] < SBUS_THRESHOLD_INVAILED)
+                    tmp_status = SBUS_INVAILD;
+                else if (pval[i] < SBUS_THRESHOLD_LOW)
+                    tmp_status = SBUS_LOW;
+                else if (pval[i] < SBUS_THRESHOLD_HIGH)
+                    tmp_status = SBUS_IDLE;
+                else
+                    tmp_status = SBUS_HIGH;
+                
+                if (env->ch_status[i] != tmp_status)
+                {
+                    env->ch_status[i] = tmp_status;
+                    
+                    if (env->ch_status[i] == SBUS_LOW)
+                    {
+                        env->irs_zoom--;
+                        
+                        if (env->irs_zoom < 0)
+                            env->irs_zoom = 0;
+                        
+                        LOG_I("irs_zoom: %d", env->irs_zoom);
+                        env->ptz_action = PANTILT_ACTION_IRZOOM;
+                        ptz_request = RT_TRUE;
+                    }
+                    else if (env->ch_status[i] == SBUS_HIGH)
+                    {
+                        env->irs_zoom++;
+                        
+                        if (env->irs_zoom > 4)
+                            env->irs_zoom = 4;
+                        
+                        LOG_I("irs_zoom: %d", env->irs_zoom);
+                        env->ptz_action = PANTILT_ACTION_IRZOOM;
+                        ptz_request = RT_TRUE;
+                    }
+                }
+                break;
             default:
                 break;
             }

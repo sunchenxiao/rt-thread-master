@@ -67,7 +67,7 @@ void pantilt_resolving_entry(void* parameter);
 #define PANTILT_ACTION_IRCOLOR          (0x05)
 #define PANTILT_ACTION_IRZOOM           (0x06)
 #define PANTILT_ACTION_CALIBRATE        (0x07)
-#define PANTILT_ACTION_ASK     			    (0x08)
+#define PANTILT_ACTION_ASK     			(0x08)
 
 #define PANTILT_MODE_HEADDOWN      	    (0x02)
 #define PANTILT_MODE_HEADLOCK      	    (0x03)

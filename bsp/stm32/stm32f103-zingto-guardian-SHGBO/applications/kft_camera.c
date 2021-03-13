@@ -170,14 +170,14 @@ void camera_resolving_entry(void* parameter)
         switch(opcode & ~CAMERA_CMD_ZOOM_GETPOS) {
             case CAMERA_CMD_CAPTURE:
                
-//				uart_send_with_block(dev, (void *)CAMERA_VISCA_CAPTURE, sizeof(CAMERA_VISCA_CAPTURE));
-//				LOG_D("VISCA_CMD_CAPTURE");
+				uart_send_with_block(dev, (void *)CAMERA_VISCA_CAPTURE, sizeof(CAMERA_VISCA_CAPTURE));
+				LOG_D("VISCA_CMD_CAPTURE");
    
-				uart_clean_recv_buff(dev, pbuf);     
-				uart_send_with_block(dev, HI3521D_CMD_CAPTURE, sizeof(HI3521D_CMD_CAPTURE));
-				LOG_D("HI3521D_CMD_CAPTURE");
-				uart_send_with_block(dev, HI3521D_CMD_CAPTURE, sizeof(HI3521D_CMD_CAPTURE));
-				LOG_D("HI3521D_CMD_CAPTURE");
+//				uart_clean_recv_buff(dev, pbuf);     
+//				uart_send_with_block(dev, HI3521D_CMD_CAPTURE, sizeof(HI3521D_CMD_CAPTURE));
+//				LOG_D("HI3521D_CMD_CAPTURE");
+//				uart_send_with_block(dev, HI3521D_CMD_CAPTURE, sizeof(HI3521D_CMD_CAPTURE));
+//				LOG_D("HI3521D_CMD_CAPTURE");
 			
 //				rt_memset(pbuf, 0x00, CAMERA_BUFFER_SIZE);
 //				result = uart_recv_with_timeout(dev, pbuf, sizeof(HI3521D_ACK_CAPTURE));
@@ -192,12 +192,12 @@ void camera_resolving_entry(void* parameter)
                 break;
             case CAMERA_CMD_RECORD_ON:
                 
-//				uart_send_with_block(dev, (void *)CAMERA_VISCA_RECORD_ON, sizeof(CAMERA_VISCA_RECORD_ON));
-//				LOG_D("VISCA_CMD_CAPTURE");
+				uart_send_with_block(dev, (void *)CAMERA_VISCA_RECORD_ON, sizeof(CAMERA_VISCA_RECORD_ON));
+				LOG_D("VISCA_CMD_CAPTURE");
 		  
-				uart_clean_recv_buff(dev, pbuf);
-				uart_send_with_block(dev, HI3521D_CMD_RECORD_ON, sizeof(HI3521D_CMD_RECORD_ON));
-				LOG_D("HI3521D_CMD_RECORD_ON");
+//				uart_clean_recv_buff(dev, pbuf);
+//				uart_send_with_block(dev, HI3521D_CMD_RECORD_ON, sizeof(HI3521D_CMD_RECORD_ON));
+//				LOG_D("HI3521D_CMD_RECORD_ON");
 		
 //				rt_memset(pbuf, 0x00, CAMERA_BUFFER_SIZE);
 //				result = uart_recv_with_timeout(dev, pbuf, sizeof(HI3521D_ACK_RECORD));
@@ -212,12 +212,12 @@ void camera_resolving_entry(void* parameter)
                 break;
             case CAMERA_CMD_RECORD_OFF:
 
-//				uart_send_with_block(dev, (void *)CAMERA_VISCA_RECORD_OFF, sizeof(CAMERA_VISCA_RECORD_OFF));
-//				LOG_D("VISCA_CMD_CAPTURE");
+				uart_send_with_block(dev, (void *)CAMERA_VISCA_RECORD_OFF, sizeof(CAMERA_VISCA_RECORD_OFF));
+				LOG_D("VISCA_CMD_CAPTURE");
 	
-				uart_clean_recv_buff(dev, pbuf);
-				uart_send_with_block(dev, HI3521D_CMD_RECORD_OFF, sizeof(HI3521D_CMD_RECORD_OFF));
-				LOG_D("HI3521D_CMD_RECORD_OFF");
+//				uart_clean_recv_buff(dev, pbuf);
+//				uart_send_with_block(dev, HI3521D_CMD_RECORD_OFF, sizeof(HI3521D_CMD_RECORD_OFF));
+//				LOG_D("HI3521D_CMD_RECORD_OFF");
 			
 //				rt_memset(pbuf, 0x00, CAMERA_BUFFER_SIZE);
 //				result = uart_recv_with_timeout(dev, pbuf, sizeof(HI3521D_ACK_RECORD));

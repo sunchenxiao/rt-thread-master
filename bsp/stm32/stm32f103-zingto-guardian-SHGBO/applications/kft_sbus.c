@@ -190,8 +190,8 @@ void sbus_resolving_entry(void* parameter)
                     }
                 }*/
                 break;                
-            case 1: // pitch
-            case 3: // yaw
+            case 13: // pitch
+            case 12: // yaw
                 if (pval[i] != env->ch_value[i])
                 {                    
                     env->ch_change[i] = RT_TRUE;
@@ -201,7 +201,7 @@ void sbus_resolving_entry(void* parameter)
                     ptz_request = RT_TRUE;
                 }
                 break;
-            case 2: // zoom
+            case 10: // zoom
 			{
 				rt_int8_t tmpuc = 0;
                 rt_int16_t differ = 0;
@@ -245,7 +245,7 @@ void sbus_resolving_entry(void* parameter)
                 }
 			}
                 break;
-            case 4: // done
+            case 5: // down
                 if (pval[i] < SBUS_THRESHOLD_INVAILED)
                     tmp_status = SBUS_INVAILD;
                 else if (pval[i] < SBUS_THRESHOLD_LOW)
@@ -272,7 +272,7 @@ void sbus_resolving_entry(void* parameter)
                         ptz_request = RT_FALSE;
                 }
                 break;        
-            case 5: // done
+            case 7: // done
                 if (pval[i] < SBUS_THRESHOLD_INVAILED)
                     tmp_status = SBUS_INVAILD;
                 else if (pval[i] < SBUS_THRESHOLD_LOW)
@@ -288,40 +288,38 @@ void sbus_resolving_entry(void* parameter)
                     
                     if (env->ch_status[i] == SBUS_HIGH)
                     {
-                        env->trck_action = TRACK_ACTION_CAPTURE;
-                        trck_request = RT_TRUE;
+//                        env->trck_action = TRACK_ACTION_CAPTURE;
+//                        trck_request = RT_TRUE;
 						
-//						env->cam_zoom_speed = 0;
-//						cam_eval = CAMERA_CMD_CAPTURE;
-//						cam_request = RT_TRUE;
+						env->cam_zoom_speed = 0;
+						cam_eval = CAMERA_CMD_CAPTURE;
+						cam_request = RT_TRUE;
                     }
                     else if (env->ch_status[i] == SBUS_LOW)
                     {
                         if (env->cam_recording)
                         {
                             env->cam_recording = RT_FALSE;
+//                            env->trck_action = TRACK_ACTION_RECORD_OFF;
 							
-                            env->trck_action = TRACK_ACTION_RECORD_OFF;
-							
-//							env->cam_zoom_speed = 0;
-//							cam_eval = CAMERA_CMD_RECORD_OFF;
+							env->cam_zoom_speed = 0;
+							cam_eval = CAMERA_CMD_RECORD_OFF;
                         }
                         else
                         {
                             env->cam_recording = RT_TRUE;
+//                            env->trck_action = TRACK_ACTION_RECORD_ON;
 							
-                            env->trck_action = TRACK_ACTION_RECORD_ON;
-							
-//							env->cam_zoom_speed = 0;
-//							cam_eval = CAMERA_CMD_RECORD_ON;
+							env->cam_zoom_speed = 0;
+							cam_eval = CAMERA_CMD_RECORD_ON;
                         }
-                        trck_request = RT_TRUE;
+                        //trck_request = RT_TRUE;
 						
-						//cam_request = RT_TRUE;
+						cam_request = RT_TRUE;
                     }
                 }
                 break;
-            case 6: // track
+            case 1: // track
                 if (pval[i] < SBUS_THRESHOLD_INVAILED)
                     tmp_status = SBUS_INVAILD;
                 else if (pval[i] < SBUS_THRESHOLD_LOW)
@@ -357,7 +355,7 @@ void sbus_resolving_entry(void* parameter)
                     }
                 }
                 break;
-            case 7: // done
+            case 6: // done
                 if (pval[i] < SBUS_THRESHOLD_INVAILED)
                     tmp_status = SBUS_INVAILD;
                 else if (pval[i] < SBUS_THRESHOLD_LOW)
@@ -433,7 +431,7 @@ void sbus_resolving_entry(void* parameter)
                     }
                 }
                 break;
-			case 10: // done
+			case 2: // done
                 if (pval[i] < SBUS_THRESHOLD_INVAILED)
                     tmp_status = SBUS_INVAILD;
                 else if (pval[i] < SBUS_THRESHOLD_LOW)

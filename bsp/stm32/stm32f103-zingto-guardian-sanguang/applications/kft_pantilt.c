@@ -222,9 +222,6 @@ static void pantilt_data_recv_entry(void* parameter)
     
 	dev5 = rt_device_find("uart5");
     LOG_I("recv sub-thread, start!");
-	
-	
-		
     
     while (1)
     {

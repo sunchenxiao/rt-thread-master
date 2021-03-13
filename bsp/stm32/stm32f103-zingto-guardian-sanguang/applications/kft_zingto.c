@@ -49,6 +49,7 @@ static rt_err_t uart_hook_callback(rt_device_t dev, rt_size_t sz)
 void zingto_resolving_entry(void* parameter)
 {
     rt_device_t dev = RT_NULL;
+	rt_device_t dev1 = RT_NULL;
     struct guardian_environment *env = RT_NULL;
     rt_err_t result = RT_EOK;
     rt_uint8_t *pbuf = RT_NULL;
@@ -60,6 +61,9 @@ void zingto_resolving_entry(void* parameter)
     
     pbuf = rt_malloc(ZINGTO_BUFFER_SIZE);
     RT_ASSERT(pbuf != RT_NULL);
+	
+	dev1 = rt_device_find("uart1");
+    RT_ASSERT(dev1 != RT_NULL);
     
     dev = rt_device_find(ZINGTO_UARTPORT_NAME);
     RT_ASSERT(dev != RT_NULL);
@@ -78,25 +82,23 @@ void zingto_resolving_entry(void* parameter)
 
     while (1)
     {
-        result = rt_sem_take(semaph, RT_WAITING_FOREVER);
+        result = rt_sem_take(semaph, 10);
         
-        if(result == -RT_ETIMEOUT)
-            continue;
-        
-        switch (szbuf){
-        case 0:
-        case 1:
-            szbuf += rt_device_read(dev, 0, pbuf + szbuf, 1);
-            if (pbuf[0] != ZINGTO_PKT_HEADER0)
-                szbuf = 0;
-            break;
-        default:
-            szbuf += rt_device_read(dev, 0, pbuf + szbuf, ZINGTO_PKT_SIZE - szbuf);
-            break;
+        if(result != -RT_ETIMEOUT)
+		{
+			szbuf += rt_device_read(dev, 0, pbuf + szbuf, 1);
+			continue;
+		}else {
+			if (szbuf == 0)
+			continue;       // ignore idle frame.
         }
-        // should nerver happened
-        if (szbuf != ZINGTO_PKT_SIZE)
-            continue;
+				
+        if(pbuf[0]==0x81)
+		{
+			rt_device_write(dev1, 0, pbuf, szbuf);
+			szbuf = 0;
+			continue;
+		} 
         
         szbuf = 0;
         

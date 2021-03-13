@@ -348,8 +348,8 @@ static void track_data_recv_entry(void* parameter)
 			rt_kprintf("env->cam_zoom_pos  %d \n",env->cam_zoom_pos);
 			
 			// notice the tracker thread to show.
-			env->trck_action = TRACK_ACTION_ZOOM_SHOW;
-			rt_sem_release(env->sh_track);
+//			env->trck_action = TRACK_ACTION_ZOOM_SHOW;
+//			rt_sem_release(env->sh_track);
 			
 			env->cam_getpos_tick = rt_tick_get();
 		}
