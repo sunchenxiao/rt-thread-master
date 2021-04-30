@@ -369,12 +369,12 @@ void pantilt_resolving_entry(void* parameter)
                     break;
             }
 
-						if (env->ptz_mode == PANTILT_MODE_HEADFREE)
-								ctrlpkt.mode = 0x0000;
-						else if (env->ptz_mode == PANTILT_MODE_HEADLOCK)
-								ctrlpkt.mode = 0x6400;               
-						else if (env->ptz_mode == PANTILT_MODE_HEADDOWN)
-								ctrlpkt.mode = 0x9BFE;
+			if (env->ptz_mode == PANTILT_MODE_HEADFREE)
+					ctrlpkt.mode = 0x0000;
+			else if (env->ptz_mode == PANTILT_MODE_HEADLOCK)
+					ctrlpkt.mode = 0x6400;               
+			else if (env->ptz_mode == PANTILT_MODE_HEADDOWN)
+					ctrlpkt.mode = 0x9BFE;
 								
             pantilt_update_checksum(&ctrlpkt);
                
@@ -450,42 +450,42 @@ void pantilt_resolving_entry(void* parameter)
             else if (env->ptz_action == PANTILT_ACTION_HOMING)
             {
                 LOG_D("PANTILT_ACTION_HOMING");
-								env->ptz_action = PANTILT_ACTION_NULL;
-								
-								pktsz = sizeof(ptz_serialctrlpkt);
-								rt_memset(&ctrlpkt, 0x00, pktsz);
-								ctrlpkt.HEADER = PANTILT_PKT_HEADER;
-								
-								if (env->ptz_mode == PANTILT_MODE_HEADFREE)
-										ctrlpkt.mode = 0x0000;
-								else if (env->ptz_mode == PANTILT_MODE_HEADLOCK)
-										ctrlpkt.mode = 0x6400;               
-								else if (env->ptz_mode == PANTILT_MODE_HEADDOWN)
-										ctrlpkt.mode = 0x9BFE;
-								
-								ctrlpkt.homing = 0x9BFE;
-								pantilt_update_checksum(&ctrlpkt);
-								pbuf = rt_mp_alloc(mempool, RT_WAITING_FOREVER);
-								rt_memcpy(pbuf, &ctrlpkt, pktsz);
-								rt_mb_send(mailbox, (rt_ubase_t)pbuf);
-								
-								rt_thread_delay(100);
-								
-								rt_memset(&ctrlpkt, 0x00, pktsz);
-								ctrlpkt.HEADER = PANTILT_PKT_HEADER;
+				env->ptz_action = PANTILT_ACTION_NULL;
+				
+				pktsz = sizeof(ptz_serialctrlpkt);
+				rt_memset(&ctrlpkt, 0x00, pktsz);
+				ctrlpkt.HEADER = PANTILT_PKT_HEADER;
+				
+				if (env->ptz_mode == PANTILT_MODE_HEADFREE)
+						ctrlpkt.mode = 0x0000;
+				else if (env->ptz_mode == PANTILT_MODE_HEADLOCK)
+						ctrlpkt.mode = 0x6400;               
+				else if (env->ptz_mode == PANTILT_MODE_HEADDOWN)
+						ctrlpkt.mode = 0x9BFE;
+				
+				ctrlpkt.homing = 0x9BFE;
+				pantilt_update_checksum(&ctrlpkt);
+				pbuf = rt_mp_alloc(mempool, RT_WAITING_FOREVER);
+				rt_memcpy(pbuf, &ctrlpkt, pktsz);
+				rt_mb_send(mailbox, (rt_ubase_t)pbuf);
+				
+				rt_thread_delay(100);
+				
+				rt_memset(&ctrlpkt, 0x00, pktsz);
+				ctrlpkt.HEADER = PANTILT_PKT_HEADER;
 
-								if (env->ptz_mode == PANTILT_MODE_HEADFREE)
-										ctrlpkt.mode = 0x0000;
-								else if (env->ptz_mode == PANTILT_MODE_HEADLOCK)
-										ctrlpkt.mode = 0x6400;               
-								else if (env->ptz_mode == PANTILT_MODE_HEADDOWN)
-										ctrlpkt.mode = 0x9BFE;
-										
-								ctrlpkt.homing = 0x0000;
-								pantilt_update_checksum(&ctrlpkt);
-								pbuf = rt_mp_alloc(mempool, RT_WAITING_FOREVER);
-								rt_memcpy(pbuf, &ctrlpkt, pktsz);
-								rt_mb_send(mailbox, (rt_ubase_t)pbuf);
+				if (env->ptz_mode == PANTILT_MODE_HEADFREE)
+						ctrlpkt.mode = 0x0000;
+				else if (env->ptz_mode == PANTILT_MODE_HEADLOCK)
+						ctrlpkt.mode = 0x6400;               
+				else if (env->ptz_mode == PANTILT_MODE_HEADDOWN)
+						ctrlpkt.mode = 0x9BFE;
+						
+				ctrlpkt.homing = 0x0000;
+				pantilt_update_checksum(&ctrlpkt);
+				pbuf = rt_mp_alloc(mempool, RT_WAITING_FOREVER);
+				rt_memcpy(pbuf, &ctrlpkt, pktsz);
+				rt_mb_send(mailbox, (rt_ubase_t)pbuf);
             }
             else
             {
@@ -508,11 +508,11 @@ void pantilt_resolving_entry(void* parameter)
 //                        dval_roll = PANTILT_VALUE_MAXIMUM;
 //                }
                 
-                dval_pitch = env->ch_value[1] - SBUS_VALUE_MEDIAN;    // pitch
+                dval_pitch = env->ch_value[7] - SBUS_VALUE_MEDIAN;    // pitch
                 if (abs(dval_pitch) < SBUS_VALUE_IGNORE)
                     dval_pitch = 0;
                
-                dval_yaw = env->ch_value[3] - SBUS_VALUE_MEDIAN;    // yaw
+                dval_yaw = env->ch_value[9] - SBUS_VALUE_MEDIAN;    // yaw
                 if (abs(dval_yaw) < SBUS_VALUE_IGNORE)
                     dval_yaw = 0;
                 

@@ -190,8 +190,8 @@ void sbus_resolving_entry(void* parameter)
                     }
                 }*/
                 break;                
-            case 1: // pitch
-            case 3: // yaw
+            case 7: // pitch
+            case 9: // yaw
                 if (pval[i] != env->ch_value[i])
                 {                    
                     env->ch_change[i] = RT_TRUE;
@@ -201,7 +201,7 @@ void sbus_resolving_entry(void* parameter)
                     ptz_request = RT_TRUE;
                 }
                 break;
-            case 2: // zoom
+            case 8: // zoom
             {
                 rt_int8_t tmpuc = 0;
                 rt_int16_t differ = 0;
@@ -251,34 +251,34 @@ void sbus_resolving_entry(void* parameter)
                 }
             }
                 break;
-            case 4: // done
-                if (pval[i] < SBUS_THRESHOLD_INVAILED)
-                    tmp_status = SBUS_INVAILD;
-                else if (pval[i] < SBUS_THRESHOLD_LOW)
-                    tmp_status = SBUS_LOW;
-                else if (pval[i] < SBUS_THRESHOLD_HIGH)
-                    tmp_status = SBUS_IDLE;
-                else
-                    tmp_status = SBUS_HIGH;
-                
-                if (env->ch_status[i] != tmp_status)
-                {
-                    env->ch_status[i] = tmp_status;
-                    
-                    ptz_request = RT_TRUE;
-                    env->ptz_action = PANTILT_ACTION_NULL;
-                    
-                    if (env->ch_status[i] == SBUS_HIGH)
-                        env->ptz_mode = PANTILT_MODE_HEADDOWN;
-                    else if (env->ch_status[i] == SBUS_IDLE)
-                        env->ptz_mode = PANTILT_MODE_HEADFREE;
-                    else if (env->ch_status[i] == SBUS_LOW)
-                        env->ptz_mode = PANTILT_MODE_HEADLOCK;
-                    else
-                        ptz_request = RT_FALSE;
-                }
-                break;        
-            case 5: // done
+//            case 4: // done
+//                if (pval[i] < SBUS_THRESHOLD_INVAILED)
+//                    tmp_status = SBUS_INVAILD;
+//                else if (pval[i] < SBUS_THRESHOLD_LOW)
+//                    tmp_status = SBUS_LOW;
+//                else if (pval[i] < SBUS_THRESHOLD_HIGH)
+//                    tmp_status = SBUS_IDLE;
+//                else
+//                    tmp_status = SBUS_HIGH;
+//                
+//                if (env->ch_status[i] != tmp_status)
+//                {
+//                    env->ch_status[i] = tmp_status;
+//                    
+//                    ptz_request = RT_TRUE;
+//                    env->ptz_action = PANTILT_ACTION_NULL;
+//                    
+//                    if (env->ch_status[i] == SBUS_HIGH)
+//                        env->ptz_mode = PANTILT_MODE_HEADDOWN;
+//                    else if (env->ch_status[i] == SBUS_IDLE)
+//                        env->ptz_mode = PANTILT_MODE_HEADFREE;
+//                    else if (env->ch_status[i] == SBUS_LOW)
+//                        env->ptz_mode = PANTILT_MODE_HEADLOCK;
+//                    else
+//                        ptz_request = RT_FALSE;
+//                }
+//                break;        
+            case 10: // done
                 if (pval[i] < SBUS_THRESHOLD_INVAILED)
                     tmp_status = SBUS_INVAILD;
                 else if (pval[i] < SBUS_THRESHOLD_LOW)
@@ -321,43 +321,43 @@ void sbus_resolving_entry(void* parameter)
                     
                 }
                 break;
-            case 6: // track
-                if (pval[i] < SBUS_THRESHOLD_INVAILED)
-                    tmp_status = SBUS_INVAILD;
-                else if (pval[i] < SBUS_THRESHOLD_LOW)
-                    tmp_status = SBUS_LOW;
-                else if (pval[i] < SBUS_THRESHOLD_HIGH)
-                    tmp_status = SBUS_IDLE;
-                else
-                    tmp_status = SBUS_HIGH;
-                
-                if (env->ch_status[i] != tmp_status)
-                {
-                    env->ch_status[i] = tmp_status;
-                    
-                    if (env->ch_status[i] == SBUS_HIGH)
-                    {
-                        if (env->trck_incharge == RT_FALSE)
-                        {
-                            if (env->trck_prepare == RT_FALSE)
-                                env->trck_action = TRACK_ACTION_PREPARE;
-                            else
-                                env->trck_action = TRACK_ACTION_TRACE_START;
-                            
-                            trck_request = RT_TRUE;
-                        }
-                    }
-                    else if (env->ch_status[i] == SBUS_LOW)
-                    {
-                        if ((env->trck_incharge == RT_TRUE) || (env->trck_prepare == RT_TRUE))
-                        {
-                            env->trck_action = TRACK_ACTION_TRACE_STOP;
-                            trck_request = RT_TRUE;
-                        }
-                    }
-                }
-                break;
-            case 7: // done
+//            case 6: // track
+//                if (pval[i] < SBUS_THRESHOLD_INVAILED)
+//                    tmp_status = SBUS_INVAILD;
+//                else if (pval[i] < SBUS_THRESHOLD_LOW)
+//                    tmp_status = SBUS_LOW;
+//                else if (pval[i] < SBUS_THRESHOLD_HIGH)
+//                    tmp_status = SBUS_IDLE;
+//                else
+//                    tmp_status = SBUS_HIGH;
+//                
+//                if (env->ch_status[i] != tmp_status)
+//                {
+//                    env->ch_status[i] = tmp_status;
+//                    
+//                    if (env->ch_status[i] == SBUS_HIGH)
+//                    {
+//                        if (env->trck_incharge == RT_FALSE)
+//                        {
+//                            if (env->trck_prepare == RT_FALSE)
+//                                env->trck_action = TRACK_ACTION_PREPARE;
+//                            else
+//                                env->trck_action = TRACK_ACTION_TRACE_START;
+//                            
+//                            trck_request = RT_TRUE;
+//                        }
+//                    }
+//                    else if (env->ch_status[i] == SBUS_LOW)
+//                    {
+//                        if ((env->trck_incharge == RT_TRUE) || (env->trck_prepare == RT_TRUE))
+//                        {
+//                            env->trck_action = TRACK_ACTION_TRACE_STOP;
+//                            trck_request = RT_TRUE;
+//                        }
+//                    }
+//                }
+//                break;
+            case 11: // done
                 if (pval[i] < SBUS_THRESHOLD_INVAILED)
                     tmp_status = SBUS_INVAILD;
                 else if (pval[i] < SBUS_THRESHOLD_LOW)
@@ -378,7 +378,7 @@ void sbus_resolving_entry(void* parameter)
                     }
                 }
                 break;
-            case 8: // done
+            case 12: // done
                 if (pval[i] < SBUS_THRESHOLD_INVAILED)
                     tmp_status = SBUS_INVAILD;
                 else if (pval[i] < SBUS_THRESHOLD_LOW)
@@ -421,44 +421,44 @@ void sbus_resolving_entry(void* parameter)
                     }
                 }
                 break;
-						case 9: // done
-                if (pval[i] < SBUS_THRESHOLD_INVAILED)
-                    tmp_status = SBUS_INVAILD;
-                else if (pval[i] < SBUS_THRESHOLD_LOW)
-                    tmp_status = SBUS_LOW;
-                else if (pval[i] < SBUS_THRESHOLD_HIGH)
-                    tmp_status = SBUS_IDLE;
-                else
-                    tmp_status = SBUS_HIGH;
-                
-                if (env->ch_status[i] != tmp_status)
-                {
-                    env->ch_status[i] = tmp_status;
-                    
-                    if (env->ch_status[i] == SBUS_LOW)
-                    {
-                        env->irs_zoom--;
-                        
-                        if (env->irs_zoom < 0)
-                            env->irs_zoom = 0;
-                        
-                        LOG_I("irs_zoom: %d", env->irs_zoom);
-                        env->ptz_action = PANTILT_ACTION_IRZOOM;
-                        ptz_request = RT_TRUE;
-                    }
-                    else if (env->ch_status[i] == SBUS_HIGH)
-                    {
-                        env->irs_zoom++;
-                        
-                        if (env->irs_zoom > 4)
-                            env->irs_zoom = 4;
-                        
-                        LOG_I("irs_zoom: %d", env->irs_zoom);
-                        env->ptz_action = PANTILT_ACTION_IRZOOM;
-                        ptz_request = RT_TRUE;
-                    }
-                }
-                break;
+//			case 9: // done
+//                if (pval[i] < SBUS_THRESHOLD_INVAILED)
+//                    tmp_status = SBUS_INVAILD;
+//                else if (pval[i] < SBUS_THRESHOLD_LOW)
+//                    tmp_status = SBUS_LOW;
+//                else if (pval[i] < SBUS_THRESHOLD_HIGH)
+//                    tmp_status = SBUS_IDLE;
+//                else
+//                    tmp_status = SBUS_HIGH;
+//                
+//                if (env->ch_status[i] != tmp_status)
+//                {
+//                    env->ch_status[i] = tmp_status;
+//                    
+//                    if (env->ch_status[i] == SBUS_LOW)
+//                    {
+//                        env->irs_zoom--;
+//                        
+//                        if (env->irs_zoom < 0)
+//                            env->irs_zoom = 0;
+//                        
+//                        LOG_I("irs_zoom: %d", env->irs_zoom);
+//                        env->ptz_action = PANTILT_ACTION_IRZOOM;
+//                        ptz_request = RT_TRUE;
+//                    }
+//                    else if (env->ch_status[i] == SBUS_HIGH)
+//                    {
+//                        env->irs_zoom++;
+//                        
+//                        if (env->irs_zoom > 4)
+//                            env->irs_zoom = 4;
+//                        
+//                        LOG_I("irs_zoom: %d", env->irs_zoom);
+//                        env->ptz_action = PANTILT_ACTION_IRZOOM;
+//                        ptz_request = RT_TRUE;
+//                    }
+//                }
+//                break;
             default:
                 break;
             }

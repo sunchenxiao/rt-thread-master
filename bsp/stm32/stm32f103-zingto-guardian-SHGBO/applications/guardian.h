@@ -125,6 +125,8 @@ struct guardian_environment
     float           ptz_pitch;
     float           ptz_roll;
 	float           laser_dis;
+	double          gps_x;
+	double          gps_y;
     
     // User
     rt_bool_t       user_incharge;

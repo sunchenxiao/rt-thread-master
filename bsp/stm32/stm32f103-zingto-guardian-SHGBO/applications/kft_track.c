@@ -443,7 +443,12 @@ void track_resolving_entry(void* parameter)
 			rt_memcpy(ctrlpkt.__reserved8 + 4, &zoomf32, 4);
             rt_memcpy(&ctrlpkt.set_ircolor, &env->ptz_yaw, sizeof(float));
 			rt_memcpy(ctrlpkt.__reserved8, &env->ptz_pitch, sizeof(float));	
-			rt_memcpy(ctrlpkt.__reserved8+24, &env->laser_dis, sizeof(float));				
+			rt_memcpy(ctrlpkt.__reserved8+24, &env->laser_dis, sizeof(float));
+			
+//			env->gps_x=3812345;
+//			env->gps_y=11412345;
+//			rt_memcpy(ctrlpkt.__reserved8+8, &env->gps_x, sizeof(double));
+//			rt_memcpy(ctrlpkt.__reserved8+16, &env->gps_y, sizeof(double));
         }
         else if (env->trck_action == TRACK_ACTION_PREPARE)
         {

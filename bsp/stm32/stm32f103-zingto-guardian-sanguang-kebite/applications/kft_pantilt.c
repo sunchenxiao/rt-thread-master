@@ -103,7 +103,7 @@ rt_uint8_t ask_jiugang=0;
 #define IRSENSOR_COLOR_PKT_HEADER   (0x05AA)
 #define IRSENSOR_ZOOM_PKT_HEADER    (0x0CAA)
 #define PANTILT_CALIB_PKT_HEADER    (0x1EE1)
-#define PTZ_ASK_PKT_HEADER    			(0x1EE1)
+#define PTZ_ASK_PKT_HEADER    		(0x1EE1)
 
 #define PANTILT_VALUE_MAXIMUM   (500)
 #define PANTILT_VALUE_MININUM   (-500)
@@ -196,7 +196,7 @@ static void pantilt_data_send_entry(void* parameter)
             LOG_D("send to pantilt calib gyro");
             rt_device_write(dev, 0, pbuf, PANTILT_CALIB_PKT_SIZE);            
         }
-				else if(ubase16 == PTZ_ASK_PKT_HEADER)
+		else if(ubase16 == PTZ_ASK_PKT_HEADER)
         { 
             rt_device_write(dev, 0, pbuf, PTZ_ASK_PKT_SIZE);            
         }
@@ -212,9 +212,9 @@ static void pantilt_data_recv_entry(void* parameter)
     struct guardian_environment *env = RT_NULL;
     rt_uint8_t* pbuf;
     rt_device_t dev = RT_NULL;
-		rt_device_t dev1 = RT_NULL;
-		rt_err_t result = RT_EOK;
-		rt_size_t szbuf = 0;
+	rt_device_t dev1 = RT_NULL;
+	rt_err_t result = RT_EOK;
+	rt_size_t szbuf = 0;
     
     env = (struct guardian_environment*)parameter;
     RT_ASSERT(env != RT_NULL);

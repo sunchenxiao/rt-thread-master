@@ -145,7 +145,7 @@ static void pantilt_data_send_entry(void* parameter)
     rt_ubase_t mail;
     rt_uint8_t* pbuf;
     rt_device_t dev = RT_NULL;
-		rt_device_t dev3 = RT_NULL;
+	rt_device_t dev3 = RT_NULL;
     rt_uint32_t ubase32 = 0;
     rt_uint16_t ubase16 = 0;
     
@@ -155,8 +155,8 @@ static void pantilt_data_send_entry(void* parameter)
     dev = rt_device_find(PANTILT_UARTPORT_NAME);
     RT_ASSERT(dev != RT_NULL);
 	
-		dev3 = rt_device_find("uart3");
-    RT_ASSERT(dev5 != RT_NULL);
+	dev3 = rt_device_find("uart3");
+    RT_ASSERT(dev3 != RT_NULL);
     
     LOG_I("send sub-thread, start!");
     
@@ -220,7 +220,7 @@ static void pantilt_data_recv_entry(void* parameter)
     dev = rt_device_find(PANTILT_UARTPORT_NAME);
     RT_ASSERT(dev != RT_NULL);
     
-		dev1 = rt_device_find("uart1");
+	dev1 = rt_device_find("uart5");
 	
 	
     LOG_I("recv sub-thread, start!");

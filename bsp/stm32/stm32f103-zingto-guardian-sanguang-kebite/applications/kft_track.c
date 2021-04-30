@@ -115,7 +115,7 @@ static void track_data_recv_entry(void* parameter)
     static shb_serialctrlpkt ctrlpkt;
     rt_size_t pktsz;
     rt_uint8_t lost_count = 0;
-		rt_uint8_t ctrl_count = 0;
+	rt_uint8_t ctrl_count = 0;
     rt_bool_t on_tracing = RT_FALSE;
     
     PID_t pid_x, pid_y;

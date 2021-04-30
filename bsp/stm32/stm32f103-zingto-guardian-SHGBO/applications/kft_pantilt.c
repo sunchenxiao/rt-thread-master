@@ -282,6 +282,9 @@ static void pantilt_data_recv_entry(void* parameter)
 			
 			LOG_D("PTZ: %d %d", *(rt_int16_t*)&pbuf[69], *(rt_int16_t*)&pbuf[71]);
 			
+			env->trck_action = TRACK_ACTION_ZOOM_SHOW;
+			rt_sem_release(env->sh_track);
+			
 //			if(env->send_flag==0)
 //			{
 //				rt_device_write(dev5, 0, send_data, 9);
@@ -292,7 +295,10 @@ static void pantilt_data_recv_entry(void* parameter)
 //		{
 //			send_data[0]=pbuf[7];
 //			send_data[1]=pbuf[6];
+//			env->laser_dis=(float)(pbuf[6]*256+pbuf[7]);
 //			rt_device_write(dev5, 0, send_data, 9);
+//			env->trck_action = TRACK_ACTION_ZOOM_SHOW;
+//			rt_sem_release(env->sh_track);
 //		}
 		//laokuan jiguangqi
 		else if(pbuf[0] == ANSWER_PKT_HEADER2 && pbuf[1] == ANSWER_PKT_HEADER3 && szbuf > 8)
@@ -558,11 +564,11 @@ void pantilt_resolving_entry(void* parameter)
                             dval_roll = PANTILT_VALUE_MAXIMUM;
                     }
                     
-                    dval_pitch = env->ch_value[13] - SBUS_VALUE_MEDIAN;    // pitch
+                    dval_pitch = env->ch_value[1] - SBUS_VALUE_MEDIAN;    // pitch
                     if (abs(dval_pitch) < SBUS_VALUE_IGNORE)
                         dval_pitch = 0;
                    
-                    dval_yaw = env->ch_value[12] - SBUS_VALUE_MEDIAN;    // yaw
+                    dval_yaw = env->ch_value[3] - SBUS_VALUE_MEDIAN;    // yaw
                     if (abs(dval_yaw) < SBUS_VALUE_IGNORE)
                         dval_yaw = 0;
                     
