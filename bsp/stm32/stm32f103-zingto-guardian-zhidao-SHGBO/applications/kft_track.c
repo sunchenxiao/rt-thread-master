@@ -430,7 +430,14 @@ void track_resolving_entry(void* parameter)
         
 		if (env->trck_action == TRACK_ACTION_ZOOM_SHOW)
         {
-			ctrlpkt.__reserved1 = 0x10;
+			if(env->trck_show==RT_FALSE)
+			{
+				ctrlpkt.__reserved1 = 0x10;
+			}
+			else
+			{
+				ctrlpkt.__reserved1 = 0x01;
+			}
 			ctrlpkt.set_mode = 0x83;
 			ctrlpkt.set_fuction = 0x30;
             

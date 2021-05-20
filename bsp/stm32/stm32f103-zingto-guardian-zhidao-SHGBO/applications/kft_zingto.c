@@ -81,6 +81,7 @@ void zingto_resolving_entry(void* parameter)
     
     LOG_I("initialization finish, start!");
 	env->laser_on=RT_FALSE;
+	env->trck_show=RT_FALSE;
 
     while (1)
     {
@@ -167,6 +168,7 @@ void zingto_resolving_entry(void* parameter)
 		{
 			if(pbuf[67]==0x01)
 			{
+				env->trck_show=RT_TRUE;
 				//rt_kprintf("test:baiguang \n");
 	            env->trck_action = TRACK_ACTION_PIP_MODE;
 				env->cam_pip_mode = 0;

@@ -422,7 +422,7 @@ void sbus_resolving_entry(void* parameter)
                     }
                 }
                 break;
-						case 9: // done
+			case 9: // done
                 if (pval[i] < SBUS_THRESHOLD_INVAILED)
                     tmp_status = SBUS_INVAILD;
                 else if (pval[i] < SBUS_THRESHOLD_LOW)

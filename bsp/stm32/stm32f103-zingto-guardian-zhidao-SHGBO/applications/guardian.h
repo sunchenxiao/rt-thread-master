@@ -135,6 +135,7 @@ struct guardian_environment
     // Track
     rt_bool_t       trck_incharge;
 	rt_bool_t       trck_incharge1;
+	rt_bool_t       trck_show;
     rt_bool_t       trck_lost;
     rt_bool_t       trck_prepare;
     rt_int16_t      trck_err_x;

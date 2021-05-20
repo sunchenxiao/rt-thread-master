@@ -341,9 +341,9 @@ static void track_data_recv_entry(void* parameter)
 				}
 			}
 			
-			if (nZoom >9) 
+			if (nZoom >29) 
 			{
-				nZoom = 9;
+				nZoom = 29;
 			}
 			
 			env->cam_zoom_pos = nZoom;
@@ -479,10 +479,10 @@ void track_resolving_entry(void* parameter)
 			ctrlpkt.set_fuction = 0x30;
             
             float  zoomf32 = 0.f;
-            if (env->cam_zoom_pos < 10)
+            if (env->cam_zoom_pos < 30)
                 zoomf32 = env->cam_zoom_pos + 1;                    // Optical ZOOM.
             else             
-                zoomf32 = 10;     // Optical ZOOM 30X combine Digital ZOOM.
+                zoomf32 = 30;     // Optical ZOOM 30X combine Digital ZOOM.
             
 			rt_memcpy(ctrlpkt.__reserved8 + 4, &zoomf32, 4);
             rt_memcpy(&ctrlpkt.set_ircolor, &env->ptz_yaw, sizeof(float));

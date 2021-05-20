@@ -541,11 +541,11 @@ void pantilt_resolving_entry(void* parameter)
                             dval_roll = PANTILT_VALUE_MAXIMUM;
                     }
                     
-                    dval_pitch = env->ch_value[1] - SBUS_VALUE_MEDIAN;    // pitch
+                    dval_pitch = env->ch_value[7] - SBUS_VALUE_MEDIAN;    // pitch
                     if (abs(dval_pitch) < SBUS_VALUE_IGNORE)
                         dval_pitch = 0;
                    
-                    dval_yaw = env->ch_value[3] - SBUS_VALUE_MEDIAN;    // yaw
+                    dval_yaw = env->ch_value[8] - SBUS_VALUE_MEDIAN;    // yaw
                     if (abs(dval_yaw) < SBUS_VALUE_IGNORE)
                         dval_yaw = 0;
                     
@@ -605,11 +605,11 @@ void pantilt_resolving_entry(void* parameter)
                             dval_roll = PANTILT_VALUE_MAXIMUM;
                     }
                     
-                    dval_pitch = env->ch_value[1] - SBUS_VALUE_MEDIAN;    // pitch
+                    dval_pitch = env->ch_value_uart[1] - SBUS_VALUE_MEDIAN;    // pitch
                     if (abs(dval_pitch) < SBUS_VALUE_IGNORE)
                         dval_pitch = 0;
                    
-                    dval_yaw = env->ch_value[3] - SBUS_VALUE_MEDIAN;    // yaw
+                    dval_yaw = env->ch_value_uart[3] - SBUS_VALUE_MEDIAN;    // yaw
                     if (abs(dval_yaw) < SBUS_VALUE_IGNORE)
                         dval_yaw = 0;
                     

@@ -74,8 +74,8 @@ rt_uint8_t ptz_set_laser[PTZ_SET_LASER_SIZE] = {0xFF,0x01,0x00,0x00,0x00,0x00,0x
 rt_uint8_t ask_laser_distance=0;
 
 #define IRSENSOR_ZOOM_PKT_SIZE  (16)
-#define SEND_PKT_DATA_SIZE		(9)
-rt_uint8_t send_angle_data[SEND_PKT_DATA_SIZE]={0xEE,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
+#define SEND_PKT_DATA_SIZE		(8)
+rt_uint8_t send_angle_data[SEND_PKT_DATA_SIZE]={0xEE,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
 
 rt_uint8_t irs_zoom[8][IRSENSOR_ZOOM_PKT_SIZE] = {
     {0xAA, 0x0C, 0x01, 0x40, 0x02, 0x00, 0x00, 0x00, 0x00, 0x7F, 0x01, 0x1F, 0x01, 0x99, 0xEB, 0xAA},
@@ -302,7 +302,7 @@ static void pantilt_data_recv_entry(void* parameter)
 		{
 			send_data[0]=pbuf[7];
 			send_data[1]=pbuf[6];
-			rt_device_write(dev5, 0, send_data, 6);
+			rt_device_write(dev5, 0, send_data, 8);
 		}
 		//laokuan jiguangqi
 //		else if(pbuf[0] == ANSWER_PKT_HEADER2 && pbuf[1] == ANSWER_PKT_HEADER3 && szbuf > 8)
@@ -434,7 +434,7 @@ void pantilt_resolving_entry(void* parameter)
 			rt_thread_mdelay(100);
 			ptz_set_laser[2]=0x01;
 			ptz_set_laser[3]=0x03;
-			ptz_set_laser[4]=0xFF;
+			ptz_set_laser[4]=0x80;
 			ptz_set_laser[5]=0x00;
 			ptz_set_laser[6]=ptz_set_laser[1]+ptz_set_laser[2]+ptz_set_laser[3]+ptz_set_laser[4]+ptz_set_laser[5];
 			
